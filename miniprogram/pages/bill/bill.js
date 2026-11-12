@@ -271,12 +271,15 @@ Page({
     });
 
     const days = rep.byDay || [];
-    const showDays = days.length > 0 && days.length <= 62;
+    const showDays = days.length > 0 && days.length <= 31;
     const maxD = Math.max(1, ...days.map(d => d.expense));
-    const dayChart = showDays ? days.map(d => ({
-      label: String(Number(d.day.slice(8))),
-      h: Math.max(2, Math.round(d.expense / maxD * 100))
-    })) : [];
+    const dayChart = showDays ? days.map(d => {
+      const n = Number(d.day.slice(8));
+      return {
+        label: (n === 1 || n % 5 === 0) ? String(n) : '',
+        h: Math.max(2, Math.round(d.expense / maxD * 100))
+      };
+    }) : [];
 
     return {
       statCats: statCats,
