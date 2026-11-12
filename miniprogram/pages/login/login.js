@@ -9,6 +9,7 @@ Page({
     nickname: '',
     err: '',
     loading: false,
+    wxLoading: false,
     bindToken: ''
   },
 
@@ -17,12 +18,62 @@ Page({
     this.setData({ bindToken: bt, mode: bt ? 'bind' : 'login' });
   },
 
+  /** 微信一键登录：已绑定直接进，未绑定转到绑定邮箱 */
+  async onWxLogin() {
+    if (this.data.wxLoading) return;
+    this.setData({ wxLoading: true, err: '' });
+    try {
+      await app.wxLogin();               // 成功时内部已写入 token
+      wx.removeStorageSync('bindToken');
+      wx.removeStorageSync('skipWx');
+      await app.boot();
+      wx.reLaunch({ url: '/pages/index/index' });
+    } catch (e) {
+      if (e.code === 'NEED_BIND') {
+        wx.setStorageSync('bindToken', e.bindToken);
+        this.setData({ mode: 'bind', bindToken: e.bindToken, password: '', err: '' });
+      } else {
+        this.setData({ err: this.errText(e) });
+      }
+    } finally {
+      this.setData({ wxLoading: false });
+    }
+  },
+
+  errText(e) {
+    const map = {
+      BAD_CREDENTIALS: '邮箱或密码不正确',
+      EMAIL_TAKEN: '这个邮箱已注册，直接登录即可',
+      WEAK_PASSWORD: '密码至少 8 位',
+      EMAIL_INVALID: '邮箱格式不对',
+      BIND_TOKEN_INVALID: '绑定已超时，请重新点微信登录',
+      WECHAT_ALREADY_BOUND: '这个微信已绑定其他账号',
+      ACCOUNT_DISABLED: '账号已停用',
+      TOO_MANY: '试得太频繁，稍后再试',
+      WX_LOGIN_FAILED: '微信登录失败，检查后台 WX_APPID / WX_SECRET',
+      WX_NOT_CONFIGURED: '后台还没配微信登录（WX_APPID / WX_SECRET）',
+      WX_UPSTREAM: '连不上微信服务器，稍后再试',
+      NETWORK: '连不上服务器，检查网络或后端地址'
+    };
+    if (e.code === 'WX_NOT_CONFIGURED' || e.code === 'WX_UPSTREAM' || e.code === 'WX_LOGIN_FAILED') {
+      return e.message || map[e.code];
+    }
+    return map[e.code] || ('失败：' + (e.message || '未知错误'));
+  },
+
   onInput(e) {
     this.setData({ [e.currentTarget.dataset.k]: e.detail.value });
   },
 
   switchMode(e) {
-    this.setData({ mode: e.currentTarget.dataset.m, err: '' });
+    const mode = e.currentTarget.dataset.m;
+    const patch = { mode, err: '' };
+    // 从「绑定微信」切到邮箱登录时放弃这次绑定，避免误绑到另一个账号
+    if (mode === 'login' && this.data.bindToken) {
+      wx.removeStorageSync('bindToken');
+      patch.bindToken = '';
+    }
+    this.setData(patch);
   },
 
   async submit() {
@@ -60,18 +111,7 @@ Page({
       await app.boot();
       wx.reLaunch({ url: '/pages/index/index' });
     } catch (e) {
-      const map = {
-        BAD_CREDENTIALS: '邮箱或密码不正确',
-        EMAIL_TAKEN: '这个邮箱已注册，直接登录即可',
-        WEAK_PASSWORD: '密码至少 8 位',
-        EMAIL_INVALID: '邮箱格式不对',
-        BIND_TOKEN_INVALID: '绑定已超时，请重新进入小程序',
-        WECHAT_ALREADY_BOUND: '这个微信已绑定其他账号',
-        ACCOUNT_DISABLED: '账号已停用',
-        TOO_MANY: '试得太频繁，稍后再试',
-        NETWORK: '连不上服务器'
-      };
-      this.setData({ err: map[e.code] || ('失败：' + e.message) });
+      this.setData({ err: this.errText(e) });
     } finally {
       this.setData({ loading: false });
     }

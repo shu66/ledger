@@ -83,6 +83,10 @@ APP_PUBLIC_URL=https://你的域名
 APP_ADMIN_EMAIL=你的邮箱
 APP_TRUST_PROXY=true
 
+# 微信登录（可留空，留空就只能邮箱登录）
+WX_APPID=wxea0e3f1721c160ae
+WX_SECRET=微信公众平台 → 开发管理 → 开发设置 里的 AppSecret
+
 AI_PARSE_DAILY=50
 AI_SUMMARY_DAILY=20
 TZ=Asia/Shanghai
@@ -99,6 +103,7 @@ openssl rand -hex 32
 - `APP_SECRET` 至少 32 字符，用来加密后台保存的 AI Key。**丢了就解不开已存的 Key**，只能重新填，务必备份。
 - 时区必须写 `connectionTimeZone=%2B08:00`。MySQL 官方镜像/默认安装没有时区表，写 `Asia/Shanghai` 会直接启动失败。
 - 走 Nginx 反代后要 `APP_TRUST_PROXY=true`，否则限流和审计日志拿到的都是 `127.0.0.1`。
+- `WX_APPID` 必须和小程序 `project.config.json` 里的 appid 一致（当前是 `wxea0e3f1721c160ae`），`WX_SECRET` 用同一个账号的 AppSecret；两个都填了「微信一键登录」才能用，否则登录页只能用邮箱。
 
 > 也可以在 Java 项目的「环境变量」里逐条填，效果一样；`.env` 的好处是升级时不用重复填。
 
@@ -251,6 +256,8 @@ mysqldump -u ledger -p ledger | gzip > /www/backup/ledger-$(date +%F).sql.gz
 | 打开域名是宝塔默认页 | 反代没生效 | 检查站点反代目标和「发送域名」 |
 | 小程序 `request:fail url not in domain list` | 没配合法域名 | 公众平台加 https 域名 |
 | 登录 401 `BAD_CREDENTIALS` | 密码错 / 账号被停用 | 后台重置密码或启用账号 |
+| 微信登录 503 `WX_NOT_CONFIGURED` | 后台没配 `WX_APPID` / `WX_SECRET` | 按第 4 节补两行，重启 Java 项目 |
+| 微信登录 401 `WX_LOGIN_FAILED` | appid 与小程序不一致 / AppSecret 错 | 核对两处 appid，重新复制 AppSecret |
 | AI 测试 502 `LLM_UPSTREAM_401` | Key 无效 | 重新填 Key |
 | AI 解析 429 `AI_QUOTA_EXCEEDED` | 当日额度用完 | 调大 `AI_PARSE_DAILY` 或等第二天 |
 | 时间差 8 小时 | 时区 | `TZ=Asia/Shanghai` + URL 固定偏移 |

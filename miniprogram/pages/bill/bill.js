@@ -423,7 +423,7 @@ Page({
     } catch (e) { /* 令牌已失效也继续本地清理 */ }
 
     wx.removeStorageSync('token');
-    wx.removeStorageSync('skipWx');
+    wx.setStorageSync('skipWx', true);   // 主动退出后不要下次启动又自动微信登录
     app.globalData.me = null;
     app.globalData.ready = false;
     wx.reLaunch({ url: '/pages/login/login' });

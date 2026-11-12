@@ -1,8 +1,15 @@
 .page {
   min-height: 100vh;
-  padding: 90rpx 44rpx 60rpx;
+  padding: 96rpx 44rpx calc(56rpx + env(safe-area-inset-bottom));
   position: relative;
+}
+
+.bg {
+  position: fixed;
+  inset: 0;
   overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .blob {
@@ -10,7 +17,6 @@
   border-radius: 50%;
   filter: blur(10rpx);
   opacity: 0.55;
-  z-index: 0;
 }
 
 .b1 {
@@ -35,7 +41,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 48rpx;
+  margin-bottom: 44rpx;
 }
 
 .logo {
@@ -69,7 +75,7 @@
 .panel {
   position: relative;
   z-index: 1;
-  padding: 36rpx 34rpx 30rpx;
+  padding: 34rpx 32rpx 32rpx;
 }
 
 .tabs {
@@ -77,7 +83,7 @@
   background: #F1EBE2;
   border-radius: 999rpx;
   padding: 6rpx;
-  margin-bottom: 30rpx;
+  margin-bottom: 28rpx;
 }
 
 .tab {
@@ -97,10 +103,63 @@
   box-shadow: 0 6rpx 14rpx rgba(74, 54, 34, 0.08);
 }
 
+/* ---------- 微信登录 ---------- */
+.wxbtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14rpx;
+  width: 100%;
+  height: 92rpx;
+  line-height: 1;
+  margin: 0;
+  padding: 0;
+  border-radius: 999rpx;
+  background: #1AAE62;
+  color: #FFFFFF;
+  font-size: 30rpx;
+  font-weight: 600;
+  box-shadow: 0 12rpx 26rpx rgba(26, 174, 98, 0.26);
+}
+
+.wxbtn-hover {
+  opacity: 0.92;
+}
+
+.wxi {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.22);
+  font-size: 20rpx;
+  font-weight: 700;
+}
+
+.or {
+  display: flex;
+  align-items: center;
+  gap: 18rpx;
+  margin: 26rpx 0 24rpx;
+}
+
+.or-line {
+  flex: 1;
+  height: 1rpx;
+  background: #EEE5D9;
+}
+
+.or-t {
+  font-size: 21rpx;
+  color: #B3A899;
+}
+
 .bindhead {
   display: flex;
   flex-direction: column;
-  margin-bottom: 30rpx;
+  margin-bottom: 28rpx;
 }
 
 .bt {
@@ -115,7 +174,7 @@
 }
 
 .field {
-  margin-bottom: 26rpx;
+  margin-bottom: 24rpx;
 }
 
 .label {
@@ -127,23 +186,31 @@
 }
 
 .ipt {
+  width: 100%;
+  height: 92rpx;
+  padding: 0 26rpx;
   background: #FAF6F0;
   border-radius: 20rpx;
-  padding: 24rpx 24rpx;
   font-size: 28rpx;
+  color: #201D18;
+}
+
+.ipt-ph {
+  color: #C9BEB0;
 }
 
 .err {
   background: #FDEDEA;
   color: #C2492A;
   font-size: 23rpx;
+  line-height: 1.5;
   border-radius: 16rpx;
   padding: 18rpx 22rpx;
   margin-bottom: 22rpx;
 }
 
 .submit {
-  margin-top: 8rpx;
+  margin-top: 6rpx;
   width: 100%;
 }
 
@@ -167,7 +234,7 @@
   z-index: 1;
   display: block;
   text-align: center;
-  margin-top: 56rpx;
+  margin-top: 48rpx;
   font-size: 21rpx;
   color: #C9BEB0;
 }

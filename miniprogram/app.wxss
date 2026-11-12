@@ -10,7 +10,15 @@ view, text, input, textarea, button {
   box-sizing: border-box;
 }
 
+button {
+  border: 0;
+}
+
 button::after {
+  border: 0;
+}
+
+input, textarea {
   border: 0;
 }
 

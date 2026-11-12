@@ -1,6 +1,5 @@
 <view class="page">
-  <view class="blob b1"></view>
-  <view class="blob b2"></view>
+  <view class="bg"><view class="blob b1"></view><view class="blob b2"></view></view>
 
   <view class="brand">
     <view class="logo">账</view>
@@ -18,22 +17,34 @@
       <text class="bs">绑好后，下次打开微信直接进来</text>
     </view>
 
+    <button class="wxbtn" wx:if="{{mode !== 'bind'}}" bindtap="onWxLogin"
+      loading="{{wxLoading}}" hover-class="wxbtn-hover">
+      <text class="wxi">微信</text>
+      <text>微信一键登录</text>
+    </button>
+
+    <view class="or" wx:if="{{mode !== 'bind'}}">
+      <view class="or-line"></view>
+      <text class="or-t">或使用邮箱密码</text>
+      <view class="or-line"></view>
+    </view>
+
     <view class="field">
       <text class="label">邮箱</text>
-      <input class="ipt" type="text" placeholder="you@example.com"
+      <input class="ipt" type="text" placeholder="you@example.com" placeholder-class="ipt-ph"
         value="{{email}}" data-k="email" bindinput="onInput" />
     </view>
 
     <view class="field">
       <text class="label">密码</text>
       <input class="ipt" password placeholder="{{mode === 'register' ? '至少 8 位' : '你的密码'}}"
-        value="{{password}}" data-k="password" bindinput="onInput" />
+        placeholder-class="ipt-ph" value="{{password}}" data-k="password" bindinput="onInput" />
     </view>
 
     <view class="field" wx:if="{{mode === 'register'}}">
       <text class="label">昵称</text>
-      <input class="ipt" placeholder="可选，方便称呼" value="{{nickname}}"
-        data-k="nickname" bindinput="onInput" />
+      <input class="ipt" placeholder="可选，方便称呼" placeholder-class="ipt-ph"
+        value="{{nickname}}" data-k="nickname" bindinput="onInput" />
     </view>
 
     <view class="err" wx:if="{{err}}">{{err}}</view>

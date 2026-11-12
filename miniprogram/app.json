@@ -18,9 +18,9 @@
     "backgroundColor": "#FFFDF9",
     "borderStyle": "white",
     "list": [
-      { "pagePath": "pages/index/index", "text": "记一笔" },
-      { "pagePath": "pages/add/add", "text": "手动记" },
-      { "pagePath": "pages/bill/bill", "text": "账单" }
+      { "pagePath": "pages/index/index", "text": "记一笔", "iconPath": "images/tab-edit.png", "selectedIconPath": "images/tab-edit-on.png" },
+      { "pagePath": "pages/add/add", "text": "手动记", "iconPath": "images/tab-add.png", "selectedIconPath": "images/tab-add-on.png" },
+      { "pagePath": "pages/bill/bill", "text": "账单", "iconPath": "images/tab-bill.png", "selectedIconPath": "images/tab-bill-on.png" }
     ]
   },
   "style": "v2",

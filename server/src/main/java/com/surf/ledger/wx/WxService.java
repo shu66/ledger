@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 
 @Service
 public class WxService {
@@ -19,18 +20,30 @@ public class WxService {
     }
 
     public String openid(String code) {
-        WxSession s = http.get()
-                .uri(u -> u.path("/sns/jscode2session")
-                        .queryParam("appid", appid)
-                        .queryParam("secret", secret)
-                        .queryParam("js_code", code)
-                        .queryParam("grant_type", "authorization_code")
-                        .build())
-                .retrieve()
-                .body(WxSession.class);
+        if (appid == null || appid.isBlank() || secret == null || secret.isBlank()) {
+            throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE, "WX_NOT_CONFIGURED",
+                    "后台还没配置微信登录：在 server/.env 里加 WX_APPID 和 WX_SECRET（微信公众平台 → 开发管理 → 开发设置），改完重启后端");
+        }
+
+        WxSession s;
+        try {
+            s = http.get()
+                    .uri(u -> u.path("/sns/jscode2session")
+                            .queryParam("appid", appid)
+                            .queryParam("secret", secret)
+                            .queryParam("js_code", code)
+                            .queryParam("grant_type", "authorization_code")
+                            .build())
+                    .retrieve()
+                    .body(WxSession.class);
+        } catch (RestClientException e) {
+            throw new ApiException(HttpStatus.BAD_GATEWAY, "WX_UPSTREAM", "连不上微信服务器：" + e.getMessage());
+        }
 
         if (s == null || s.errcode() != null || s.openid() == null) {
-            throw new ApiException(HttpStatus.UNAUTHORIZED, "WX_LOGIN_FAILED");
+            String msg = s == null ? "空响应" : (s.errcode() + " " + s.errmsg());
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "WX_LOGIN_FAILED",
+                    "微信登录失败（" + msg + "）。常见原因：小程序 appid 与后台 WX_APPID 不一致，或 AppSecret 填错");
         }
         return s.openid();
     }

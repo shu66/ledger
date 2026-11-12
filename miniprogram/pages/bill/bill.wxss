@@ -1,5 +1,5 @@
 .page {
-  padding: 20rpx 28rpx 40rpx;
+  padding: 20rpx 28rpx calc(40rpx + env(safe-area-inset-bottom));
 }
 
 /* ---------- 月份切换 ---------- */
@@ -236,7 +236,7 @@
   background: #FFFFFF; border-radius: 18rpx; padding: 16rpx 22rpx; margin-bottom: 20rpx;
 }
 .searchbox .sicon { font-size: 24rpx; opacity: .5; }
-.searchbox .sinput { flex: 1; font-size: 26rpx; color: #201D18; }
+.searchbox .sinput { flex: 1; height: 56rpx; font-size: 26rpx; color: #201D18; }
 .searchbox .sph { color: #A79B8B; }
 .searchbox .sclear { color: #A79B8B; font-size: 26rpx; padding: 0 6rpx; }
 

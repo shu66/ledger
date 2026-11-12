@@ -3,8 +3,9 @@
 // 真机调试：把 DEV 换成开发机的内网 IP（手机和电脑连同一个 Wi-Fi），
 //   本机当前是 192.168.10.103，并且要放行防火墙 3000 端口。
 // 上线：把 PROD 换成小程序后台「开发管理 → 服务器域名」里配置过的 https 域名。
-const DEV = 'http://127.0.0.1:3000';
-const PROD = 'https://ledger.example.com';
+// const DEV = 'http://127.0.0.1:3000';
+const DEV = 'https://jz.shu66.top';
+const PROD = 'https://jz.shu66.top';
 
 function base() {
   // 体验版/开发版走 DEV，正式版自动走 PROD，避免发版时忘了改地址

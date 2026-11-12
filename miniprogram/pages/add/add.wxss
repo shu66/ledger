@@ -137,6 +137,7 @@
 
 .fi {
   flex: 1;
+  height: 46rpx;
   font-size: 28rpx;
 }
 

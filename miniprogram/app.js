@@ -130,6 +130,7 @@ App({
               return reject(err);
             }
             wx.setStorageSync('token', res.token);
+            wx.removeStorageSync('skipWx');   // 之后启动可以继续自动登录
             resolve(res);
           } catch (e) {
             reject(e);

@@ -50,6 +50,7 @@
   display: flex;
   align-items: baseline;
   margin-top: 28rpx;
+  min-width: 0;
 }
 
 .cur {
@@ -59,10 +60,14 @@
 }
 
 .num {
+  max-width: 100%;
   font-size: 76rpx;
   font-weight: 700;
   letter-spacing: 1rpx;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .hero-sub {
