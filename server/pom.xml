@@ -13,7 +13,7 @@
 
   <groupId>com.surf</groupId>
   <artifactId>ledger</artifactId>
-  <version>0.5.2</version>
+  <version>0.5.3</version>
 
   <properties>
     <java.version>17</java.version>

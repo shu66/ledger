@@ -10,12 +10,19 @@ Page({
     err: '',
     loading: false,
     wxLoading: false,
-    bindToken: ''
+    bindToken: '',
+    focusKey: '',      // 当前聚焦的输入框：email | password | nickname
+    topPad: 34         // 自定义导航栏下，让出状态栏高度
   },
 
   onLoad() {
     const bt = wx.getStorageSync('bindToken') || '';
-    this.setData({ bindToken: bt, mode: bt ? 'bind' : 'login' });
+    let topPad = 34;
+    try {
+      const info = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync();
+      topPad = (info.statusBarHeight || 24) + 10;
+    } catch (e) { /* 取不到就用默认值 */ }
+    this.setData({ bindToken: bt, mode: bt ? 'bind' : 'login', topPad });
   },
 
   /** 微信一键登录：已绑定直接进，未绑定转到绑定邮箱 */
@@ -31,7 +38,7 @@ Page({
     } catch (e) {
       if (e.code === 'NEED_BIND') {
         wx.setStorageSync('bindToken', e.bindToken);
-        this.setData({ mode: 'bind', bindToken: e.bindToken, password: '', err: '' });
+        this.setData({ mode: 'bind', bindToken: e.bindToken, password: '', err: '', focusKey: '' });
       } else {
         this.setData({ err: this.errText(e) });
       }
@@ -65,9 +72,27 @@ Page({
     this.setData({ [e.currentTarget.dataset.k]: e.detail.value });
   },
 
+  /* 整块输入区都能点：第一次点就聚焦并弹出键盘，
+     不再出现「要点两次才能输入」的情况 */
+  onFieldTap(e) {
+    const k = e.currentTarget.dataset.k;
+    if (k && this.data.focusKey !== k) this.setData({ focusKey: k });
+  },
+
+  onFocus(e) {
+    const k = e.currentTarget.dataset.k;
+    if (k && this.data.focusKey !== k) this.setData({ focusKey: k });
+  },
+
+  onBlur(e) {
+    const k = e.currentTarget.dataset.k;
+    // 只有「当前聚焦的正好是它」时才清空，避免点另一个输入框时把新的焦点又清掉
+    if (k && this.data.focusKey === k) this.setData({ focusKey: '' });
+  },
+
   switchMode(e) {
     const mode = e.currentTarget.dataset.m;
-    const patch = { mode, err: '' };
+    const patch = { mode, err: '', focusKey: '' };
     // 从「绑定微信」切到邮箱登录时放弃这次绑定，避免误绑到另一个账号
     if (mode === 'login' && this.data.bindToken) {
       wx.removeStorageSync('bindToken');
@@ -81,7 +106,8 @@ Page({
     if (!email || !password) {
       return this.setData({ err: '邮箱和密码都要填' });
     }
-    this.setData({ loading: true, err: '' });
+    wx.hideKeyboard();
+    this.setData({ loading: true, err: '', focusKey: '' });
 
     try {
       let token;
