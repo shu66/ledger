@@ -13,7 +13,7 @@
 
   <groupId>com.surf</groupId>
   <artifactId>ledger</artifactId>
-  <version>0.5.1</version>
+  <version>0.5.2</version>
 
   <properties>
     <java.version>17</java.version>
@@ -29,7 +29,7 @@
       <artifactId>spring-boot-starter-jdbc</artifactId>
     </dependency>
 
-    <!-- 鍙 BCrypt锛屼笉寮曞叆 Spring Security 杩囨护鍣ㄩ摼 -->
+    <!-- 閸欘亣顩?BCrypt閿涘奔绗夊鏇炲弳 Spring Security 鏉╁洦鎶ら崳銊╂懠 -->
     <dependency>
       <groupId>org.springframework.security</groupId>
       <artifactId>spring-security-crypto</artifactId>
@@ -85,4 +85,5 @@
     </plugins>
   </build>
 </project>
+
 

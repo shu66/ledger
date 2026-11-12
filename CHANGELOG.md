@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 0.5.2 — 2026-11-12
+
+### 修复
+- **微信登录 500 INTERNAL**：微信 `jscode2session` 返回的是 `Content-Type: text/plain`，旧代码让 Spring 直接映射成对象，抛「不支持的媒体类型」，被兜底处理成 500。现在先取字符串再用 Jackson 解析；微信返回错误时把 `errcode/errmsg` 原样带回（如 `40125 invalid appsecret`），连不上微信则返回 502 `WX_UPSTREAM`。
+
 ## 0.5.1 — 2026-11-12
 
 ### 修复
