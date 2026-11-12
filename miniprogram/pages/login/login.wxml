@@ -32,19 +32,19 @@
     <view class="field">
       <text class="label">邮箱</text>
       <input class="ipt" type="text" placeholder="you@example.com" placeholder-class="ipt-ph"
-        value="{{email}}" data-k="email" bindinput="onInput" />
+        value="{{email}}" data-k="email" bindinput="onInput" cursor-spacing="24" />
     </view>
 
     <view class="field">
       <text class="label">密码</text>
       <input class="ipt" password placeholder="{{mode === 'register' ? '至少 8 位' : '你的密码'}}"
-        placeholder-class="ipt-ph" value="{{password}}" data-k="password" bindinput="onInput" />
+        placeholder-class="ipt-ph" value="{{password}}" data-k="password" bindinput="onInput" cursor-spacing="24" />
     </view>
 
     <view class="field" wx:if="{{mode === 'register'}}">
       <text class="label">昵称</text>
       <input class="ipt" placeholder="可选，方便称呼" placeholder-class="ipt-ph"
-        value="{{nickname}}" data-k="nickname" bindinput="onInput" />
+        value="{{nickname}}" data-k="nickname" bindinput="onInput" cursor-spacing="24" />
     </view>
 
     <view class="err" wx:if="{{err}}">{{err}}</view>
