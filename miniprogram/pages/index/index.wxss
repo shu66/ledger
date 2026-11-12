@@ -393,6 +393,18 @@
   background: #FBEDE6;
 }
 
+.sheet-item.add {
+  border: 2rpx dashed #D8C7B4;
+  background: transparent;
+}
+.sheet-item.add .si-ico {
+  color: #D9552F;
+  font-weight: 600;
+}
+.sheet-item.add .si-name {
+  color: #D9552F;
+}
+
 .si-ico {
   font-size: 34rpx;
   line-height: 1.1;

@@ -160,6 +160,52 @@ Page({
     this.setData({ cards, edited: true, 'picker.show': false });
   },
 
+  // 解析结果里找不到合适分类时，当场新建一个（建完自动选中）
+  async newCatInPicker() {
+    const { i } = this.data.picker;
+    const card = this.data.cards[i];
+    if (!card) return;
+
+    const res = await new Promise(resolve => {
+      wx.showModal({
+        title: '新建分类',
+        editable: true,
+        placeholderText: '例如：宠物、装修',
+        success: resolve,
+        fail: () => resolve({ confirm: false })
+      });
+    });
+    if (!res.confirm) return;
+
+    const name = (res.content || '').trim();
+    if (!name) return wx.showToast({ title: '请输入分类名称', icon: 'none' });
+
+    try {
+      const c = await api.post('/api/categories', {
+        name,
+        type: card.type,
+        icon: '🏷️'
+      });
+      await app.refreshCategories();
+      const found = (app.globalData.categories || []).find(x => x.id === c.id) || c;
+
+      const cards = this.data.cards.slice();
+      cards[i] = Object.assign({}, cards[i], {
+        category: found.id,
+        catName: found.name,
+        icon: found.icon || '🏷️'
+      });
+      this.setData({
+        cards,
+        edited: true,
+        picker: { show: false, i: 0, cats: [], cur: '' }
+      });
+      wx.showToast({ title: '已新建并选用', icon: 'none' });
+    } catch (err) {
+      wx.showToast({ title: err.message || '新建失败', icon: 'none' });
+    }
+  },
+
   onDrop(e) {
     const i = e.currentTarget.dataset.i;
     const cards = this.data.cards.slice();

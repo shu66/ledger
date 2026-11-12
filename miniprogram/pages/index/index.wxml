@@ -102,6 +102,10 @@
           <text class="si-ico">{{c.icon || '✨'}}</text>
           <text class="si-name">{{c.name}}</text>
         </view>
+        <view class="sheet-item add" bindtap="newCatInPicker">
+          <text class="si-ico">＋</text>
+          <text class="si-name">新建分类</text>
+        </view>
       </view>
     </scroll-view>
   </view>

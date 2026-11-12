@@ -841,7 +841,8 @@ function renderDrafts() {
     const cat = catOf(S.cats, d.category);
     const options = S.cats.filter(c => c.type === d.type).map(c =>
       '<option value="' + c.id + '"' + (c.id === d.category ? ' selected' : '') + '>' +
-      esc((c.icon || '') + ' ' + c.name) + '</option>').join('');
+      esc((c.icon || '') + ' ' + c.name) + '</option>').join('') +
+      '<option value="__new__">＋ 新建分类…</option>';
 
     return '<div class="draft">' +
       '<div class="draft-top">' +
@@ -880,11 +881,58 @@ function onDraftClick(e) {
   }
 }
 
-function onDraftChange(e) {
+async function onDraftChange(e) {
   const sel = e.target.closest('[data-cat]');
   if (!sel) return;
+  const i = Number(sel.dataset.cat);
+
+  // 「＋ 新建分类…」：当场建一个并选中，不用离开解析结果
+  if (sel.value === '__new__') {
+    sel.value = S.draft[i].category;
+    const cat = await draftNewCategory(S.draft[i].type);
+    if (cat) {
+      S.draft[i].category = cat.id;
+      S.edited = true;
+      renderDrafts();
+    }
+    return;
+  }
+
   S.draft[Number(sel.dataset.cat)].category = sel.value;
   S.edited = true;
+}
+
+/* 解析卡片里的“新建分类”弹窗，建完返回分类对象 */
+async function draftNewCategory(type) {
+  const handle = await uiModal(
+    '<h3>新建分类</h3>' +
+    '<div class="modal-body"><label class="field"><span>名称</span><input id="dnName" maxlength="12" placeholder="例如：宠物" /></label>' +
+    '<label class="field" style="margin-top:12px"><span>图标（可选）</span><input id="dnIcon" maxlength="4" placeholder="🐱" /></label></div>' +
+    '<div class="modal-actions"><button class="btn ghost" data-cancel>取消</button><button class="btn" data-ok>创建并选用</button></div>',
+    {}
+  );
+
+  return new Promise(resolve => {
+    let done = false;
+    const finish = v => { if (!done) { done = true; resolve(v); } };
+
+    handle.root.querySelector('[data-cancel]').onclick = () => { handle.close(null); finish(null); };
+    handle.root.querySelector('[data-ok]').onclick = async () => {
+      const name = (handle.root.querySelector('#dnName').value || '').trim();
+      const icon = (handle.root.querySelector('#dnIcon').value || '').trim() || '🏷️';
+      if (!name) { uiToast('请输入名称', 'err'); return; }
+      try {
+        const cat = await req('/api/categories', { method: 'POST', body: { name, type, icon } });
+        handle.close(true);
+        /* 先刷新分类列表，再让调用方重绘下拉，否则新分类还不在 options 里 */
+        try { await loadCats(); } catch (e) { /* 列表刷新失败也不挡这次选择 */ }
+        finish(cat);
+        uiToast('分类已添加', 'ok');
+      } catch (err) {
+        uiToast('添加失败：' + err.message, 'err');
+      }
+    };
+  });
 }
 
 async function saveDrafts() {
