@@ -1,0 +1,162 @@
+.page {
+  padding: 24rpx 28rpx 220rpx;
+}
+
+/* ---------- 支出 / 收入 ---------- */
+.seg {
+  display: flex;
+  background: #EFE7DC;
+  border-radius: 999rpx;
+  padding: 6rpx;
+}
+
+.seg-item {
+  flex: 1;
+  text-align: center;
+  font-size: 27rpx;
+  color: #8C8377;
+  padding: 16rpx 0;
+  border-radius: 999rpx;
+  transition: all 0.18s ease;
+}
+
+.seg-item.on {
+  background: #FFFFFF;
+  color: #201D18;
+  font-weight: 600;
+  box-shadow: 0 6rpx 16rpx rgba(74, 54, 34, 0.1);
+}
+
+/* ---------- 金额 ---------- */
+.amount-card {
+  margin-top: 24rpx;
+  padding: 34rpx 32rpx 26rpx;
+  display: flex;
+  align-items: baseline;
+}
+
+.cur {
+  font-size: 40rpx;
+  color: #9A9186;
+  margin-right: 12rpx;
+}
+
+.amt {
+  flex: 1;
+  font-size: 72rpx;
+  font-weight: 700;
+  height: 92rpx;
+  font-variant-numeric: tabular-nums;
+}
+
+.amt-ph {
+  color: #D9CFC1;
+  font-weight: 700;
+}
+
+/* ---------- 分类 ---------- */
+.sec {
+  margin-top: 36rpx;
+}
+
+.sec-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 8rpx 16rpx;
+  font-size: 25rpx;
+  color: #7A6F62;
+}
+
+.sec-head .add {
+  font-size: 23rpx;
+  color: #D9552F;
+  background: #FBE9E2;
+  padding: 8rpx 20rpx;
+  border-radius: 999rpx;
+}
+
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.cell {
+  width: calc((100% - 48rpx) / 4);
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 22rpx 0 18rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 2rpx solid transparent;
+  box-shadow: 0 8rpx 20rpx rgba(74, 54, 34, 0.05);
+  transition: all 0.15s ease;
+}
+
+.cell.on {
+  border-color: #E8703F;
+  background: #FDF3EC;
+  transform: translateY(-2rpx);
+}
+
+.cio {
+  font-size: 40rpx;
+  line-height: 1.2;
+}
+
+.cname {
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  color: #6B6258;
+}
+
+.cell.on .cname {
+  color: #C2492A;
+  font-weight: 600;
+}
+
+/* ---------- 备注 / 日期 ---------- */
+.fields {
+  margin-top: 36rpx;
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  padding: 28rpx 30rpx;
+  margin-bottom: 16rpx;
+}
+
+.fl {
+  width: 110rpx;
+  font-size: 26rpx;
+  color: #9A9186;
+}
+
+.fi {
+  flex: 1;
+  font-size: 28rpx;
+}
+
+.fv {
+  flex: 1;
+  text-align: right;
+  font-size: 27rpx;
+  color: #201D18;
+}
+
+/* ---------- 底部保存 ---------- */
+.savebar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 20rpx 28rpx calc(24rpx + env(safe-area-inset-bottom));
+  background: linear-gradient(180deg, rgba(246, 242, 236, 0), #F6F2EC 32%);
+}
+
+.savebar .btn-primary {
+  width: 100%;
+}

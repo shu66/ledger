@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>记账本</title>
+<link rel="stylesheet" href="/style.css" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='16' fill='%23D9552F'/><text x='32' y='44' font-size='34' text-anchor='middle' fill='white' font-family='serif'>账</text></svg>" />
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">账</div>
+      <div>
+        <div class="brand-name">记账本</div>
+        <div class="brand-sub">LEDGER</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <button class="nav-item on" data-tab="write"><span class="dot"></span>记一笔</button>
+      <button class="nav-item" data-tab="bills"><span class="dot"></span>账单与统计</button>
+      <button class="nav-item" data-tab="cats"><span class="dot"></span>分类管理</button>
+      <a class="nav-item" id="adminLink" href="/admin.html" style="display:none"><span class="dot"></span>管理后台</a>
+    </nav>
+
+    <div class="sidebar-foot">
+      <div class="side-user">
+        <div class="avatar" id="avatar">U</div>
+        <div class="side-user-main">
+          <div class="side-name" id="sideName">—</div>
+          <div class="sidebar-user" id="who"></div>
+        </div>
+      </div>
+      <button class="nav-item" id="logoutBtn">退出登录</button>
+      <div class="sync-note" id="syncNote" style="display:none" title="点击立即同步"></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <h1 id="pageTitle">记一笔</h1>
+        <p class="sub" id="pageSub">写一句话，AI 帮你拆金额、商家和分类</p>
+      </div>
+      <div class="top-actions">
+        <span class="tag" id="monthTag"></span>
+      </div>
+    </header>
+
+    <!-- 记一笔 -->
+    <section class="panel on" id="panel-write">
+      <div class="kpis" id="writeKpis"></div>
+
+      <div class="write-grid">
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <h2>新增账目</h2>
+              <p class="hint">写一句话交给 AI，或者自己填一笔</p>
+            </div>
+            <div class="seg" id="modeSeg">
+              <button class="on" data-mode="ai">AI 解析</button>
+              <button data-mode="manual">手动记账</button>
+            </div>
+          </div>
+
+          <div id="mode-ai">
+            <textarea id="text" rows="3" maxlength="500"
+              placeholder="例如：昨天打车 36，中午和同事吃饭 AA 89，晚上看电影 45"></textarea>
+            <div class="row wrap" style="margin-top:10px">
+              <button class="btn" id="parseBtn">解析</button>
+              <button class="btn ghost" data-example="午饭面馆 25 元">试试：午饭面馆 25 元</button>
+              <button class="btn ghost" data-example="昨天打车 36，中午和同事吃饭 AA 89">试试：多笔</button>
+              <span class="hint" id="quotaHint" style="margin-left:auto">Ctrl / ⌘ + Enter 直接解析</span>
+            </div>
+            <div id="createdTip" class="notice" style="display:none;margin-top:14px"></div>
+            <div id="drafts" style="margin-top:18px"></div>
+            <div class="actions" id="aiActions" style="margin-top:16px;display:none">
+              <button class="btn ghost" id="addDraftBtn">＋ 补一笔</button>
+              <button class="btn ghost" id="clearDrafts">清空</button>
+              <button class="btn" id="saveBtn">确认入账</button>
+            </div>
+          </div>
+
+          <div id="mode-manual" style="display:none">
+            <div class="grid-3">
+              <label class="field">
+                <span>金额</span>
+                <input id="mAmount" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00" />
+              </label>
+              <label class="field">
+                <span>分类</span>
+                <select id="mCat"></select>
+              </label>
+              <label class="field">
+                <span>日期</span>
+                <input id="mDate" type="date" />
+              </label>
+            </div>
+            <div class="row" style="margin-top:14px">
+              <div class="seg" id="mType">
+                <button class="on" data-type="expense">支出</button>
+                <button data-type="income">收入</button>
+              </div>
+              <input id="mNote" type="text" maxlength="80" placeholder="备注：午饭、超市、工资…" style="flex:1" />
+            </div>
+            <div class="actions" style="margin-top:16px">
+              <button class="btn ghost" id="newCatBtn">＋ 新建分类</button>
+              <button class="btn soft" id="manualSave">记下这笔</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="side-col">
+          <div class="card">
+            <div class="card-head">
+              <div>
+                <h2>本月支出结构</h2>
+                <p class="hint" id="miniSub">按分类</p>
+              </div>
+              <button class="btn ghost sm" data-goto="bills">统计</button>
+            </div>
+            <div class="mini-donut" id="miniDonut"></div>
+            <div class="legend compact" id="miniLegend"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card recent-card">
+        <div class="card-head">
+          <div>
+            <h2>最近入账</h2>
+            <p class="hint">最近 6 笔，点击右上角查看完整账单</p>
+          </div>
+          <button class="btn ghost sm" data-goto="bills">全部</button>
+        </div>
+        <div id="recent" class="tx-list recent-grid"></div>
+      </div>
+    </section>
+
+    <!-- 账单与统计 -->
+    <section class="panel" id="panel-bills">
+      <div class="bill-head">
+        <div class="month-nav">
+          <button class="icon-btn" id="prevPeriod" title="上一段">‹</button>
+          <h2 id="rangeLabel">2026 年 11 月</h2>
+          <button class="icon-btn" id="nextPeriod" title="下一段">›</button>
+        </div>
+        <div class="period-bar">
+          <div class="seg" id="periodSeg">
+            <button data-range="day">今天</button>
+            <button data-range="week">本周</button>
+            <button class="on" data-range="month">本月</button>
+            <button data-range="year">今年</button>
+            <button data-range="custom">自定义</button>
+          </div>
+          <div class="range-dates" id="rangeDates" style="display:none">
+            <input type="date" id="fromDate" />
+            <span class="muted">—</span>
+            <input type="date" id="toDate" />
+            <button class="btn ghost sm" id="applyRange">查看</button>
+          </div>
+        </div>
+        <div class="row">
+          <span class="tag" id="billCount"></span>
+          <button class="btn ghost sm" id="exportBtn">导出本区间</button>
+          <button class="btn ghost sm" id="exportAll">导出全部</button>
+        </div>
+      </div>
+
+      <div class="kpis" id="billKpis"></div>
+
+      <div class="card summary-card" id="summaryCard" style="display:none">
+        <div class="card-head">
+          <div>
+            <h2>AI 账单总结</h2>
+            <p class="hint" id="summaryMeta"></p>
+          </div>
+          <button class="btn ghost sm" id="summaryClose">收起</button>
+        </div>
+        <div id="summaryText" class="summary-text"></div>
+      </div>
+
+      <div class="chart-grid">
+        <div class="card chart-card">
+          <div class="card-head">
+            <div><h2>支出结构</h2><p class="hint">钱花在了哪里</p></div>
+            <span class="tag" id="expenseTotalTag"></span>
+          </div>
+          <div class="donut-wrap">
+            <div id="donut"></div>
+            <div class="legend" id="legend"></div>
+          </div>
+        </div>
+
+        <div class="card chart-card">
+          <div class="card-head">
+            <div><h2 id="trendTitle">近 6 个月收支</h2><p class="hint" id="trendHint">长期趋势比单月更能说明问题</p></div>
+            <div class="legend inline">
+              <span><i class="dotc" style="background:#D9552F"></i>支出</span>
+              <span><i class="dotc" style="background:#4C9A6E"></i>收入</span>
+            </div>
+          </div>
+          <div id="trendChart" class="chart"></div>
+        </div>
+      </div>
+
+      <div class="card chart-card">
+        <div class="card-head">
+          <div><h2 id="dayTitle">每日支出</h2><p class="hint" id="dayHint">哪几天花得多</p></div>
+          <span class="tag" id="peakTag"></span>
+        </div>
+        <div id="dayChart" class="chart"></div>
+      </div>
+
+      <div class="grid-2" style="margin-top:14px">
+        <div class="card">
+          <div class="card-head"><div><h2>商家排行</h2><p class="hint">本月支出 Top 6</p></div></div>
+          <div id="merchants"></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div><h2>分类占比</h2><p class="hint">含收入分类</p></div></div>
+          <div id="catBars"></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <div class="card-head">
+          <div><h2>收支明细</h2><p class="hint" id="billHint">按时间倒序</p></div>
+          <div class="row">
+            <input class="search" id="searchInput" type="search" placeholder="搜索备注 / 商家 / 分类" />
+            <button class="btn ghost sm" id="summaryBtn">AI 总结这段</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th style="width:110px">时间</th><th>说明</th><th style="width:150px">分类</th><th class="num" style="width:120px">金额</th><th style="width:72px"></th></tr></thead>
+            <tbody id="billRows"></tbody>
+          </table>
+        </div>
+        <div id="billEmpty" class="empty" style="display:none">这个区间还没有记账，回「记一笔」说一句试试</div>
+      </div>
+    </section>
+
+    <!-- 分类 -->
+    <section class="panel" id="panel-cats">
+      <div class="card">
+        <div class="card-head">
+          <div><h2>我的分类</h2><p class="hint">系统分类固定，自建分类可以删除；AI 遇到没有的分类也会自动建</p></div>
+        </div>
+        <div id="catList" class="cats"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><div><h2>新建分类</h2><p class="hint">名字最多 12 个字</p></div></div>
+        <div class="grid-3">
+          <label class="field"><span>名称</span><input id="cName" type="text" maxlength="12" placeholder="例如：宠物、咖啡" /></label>
+          <label class="field"><span>类型</span>
+            <select id="cType"><option value="expense">支出</option><option value="income">收入</option></select>
+          </label>
+          <label class="field"><span>图标（emoji）</span><input id="cIcon" type="text" maxlength="4" placeholder="✨" /></label>
+        </div>
+        <div class="actions" style="margin-top:16px"><button class="btn" id="createCat">添加分类</button></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="/common.js"></script>
+<script>
+const S = {
+  me: null,
+  cats: [],
+  month: monthNow(),
+  range: 'month',        // day | week | month | year | custom
+  anchor: todayIso(),    // 日/周视图的锚点日期
+  year: new Date().getFullYear(),
+  from: '',
+  to: '',
+  rangeLabel: '',
+  q: '',
+  report: null,
+  txs: [],
+  draft: [],
+  raw: '',
+  model: '',
+  edited: false,
+  mode: 'ai',
+  pendingText: '',
+  type: 'expense',
+  outbox: outboxAll()
+};
+
+const yuan = (fen) => (Number(fen || 0) / 100).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const moneyText = (fen) => { const n = Number(fen || 0); return (n < 0 ? '-¥' : '¥') + yuan(Math.abs(n)); };
+
+function todayIso() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function addDays(iso, n) {
+  const p = iso.split('-').map(Number);
+  const d = new Date(p[0], p[1] - 1, p[2] + n);
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function fmtRangeLabel(from, to) {
+  if (from === to) return Number(from.slice(5, 7)) + ' 月 ' + Number(from.slice(8)) + ' 日';
+  return Number(from.slice(5, 7)) + '/' + Number(from.slice(8)) + ' – ' +
+    Number(to.slice(5, 7)) + '/' + Number(to.slice(8));
+}
+
+/* 当前视图对应的时间区间（含端点） */
+function rangeOf() {
+  const today = todayIso();
+  if (S.range === 'day') return { from: S.anchor, to: S.anchor, label: fmtRangeLabel(S.anchor, S.anchor) };
+  if (S.range === 'week') {
+    const p = S.anchor.split('-').map(Number);
+    const d = new Date(p[0], p[1] - 1, p[2]);
+    const dow = (d.getDay() + 6) % 7;          // 周一为一周开始
+    const mon = addDays(S.anchor, -dow);
+    const sun = addDays(mon, 6);
+    return { from: mon, to: sun, label: fmtRangeLabel(mon, sun) };
+  }
+  if (S.range === 'year') return { from: S.year + '-01-01', to: S.year + '-12-31', label: S.year + ' 年' };
+  if (S.range === 'custom' && S.from && S.to) {
+    return { from: S.from, to: S.to, label: fmtRangeLabel(S.from, S.to) };
+  }
+  const parts = S.month.split('-').map(Number);
+  const last = new Date(parts[0], parts[1], 0).getDate();
+  return {
+    from: S.month + '-01',
+    to: S.month + '-' + String(last).padStart(2, '0'),
+    label: monthText(S.month)
+  };
+}
+
+const KP = { day: '今日', week: '本周', month: '本月', year: '今年', custom: '区间' };
+
+/* ---------------- 启动 ---------------- */
+
+async function boot() {
+  guard();
+  try {
+    S.me = await req('/auth/me');
+  } catch (e) {
+    setToken('');
+    location.href = '/login.html';
+    return;
+  }
+
+  $('#sideName').textContent = S.me.nickname || '账本主人';
+  $('#who').textContent = S.me.email || '';
+  $('#avatar').textContent = (S.me.nickname || S.me.email || 'U').slice(0, 1).toUpperCase();
+  if (S.me.role === 'admin') $('#adminLink').style.display = '';
+
+  $('#mDate').value = new Date().toISOString().slice(0, 10);
+
+  wire();
+  await loadCats();
+  await loadRange();
+  renderRecent();
+  loadQuota();
+  syncBadge();
+  flushOutbox(true);
+  setInterval(() => flushOutbox(true), 20000);
+  window.addEventListener('online', () => flushOutbox(false));
+}
+
+/* ---------------- 事件 ---------------- */
+
+function wire() {
+  $$('.nav-item[data-tab]').forEach(b => b.onclick = () => switchTab(b.dataset.tab));
+  $$('[data-goto]').forEach(b => b.onclick = () => switchTab(b.dataset.goto));
+  $('#logoutBtn').onclick = () => logout();
+
+  $$('#modeSeg button').forEach(b => b.onclick = () => {
+    setMode(b.dataset.mode);
+  });
+
+  $('#parseBtn').onclick = () => doParse();
+  $$('[data-example]').forEach(b => b.onclick = () => { $('#text').value = b.dataset.example; $('#text').focus(); });
+  $('#text').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); doParse(); }
+  });
+  $('#clearDrafts').onclick = () => { S.draft = []; renderDrafts(); };
+  $('#saveBtn').onclick = () => saveDrafts();
+
+  $$('#mType button').forEach(b => b.onclick = () => {
+    S.type = b.dataset.type;
+    $$('#mType button').forEach(x => x.classList.toggle('on', x.dataset.type === S.type));
+    renderManualCats();
+  });
+  $('#manualSave').onclick = () => saveManual();
+  $('#newCatBtn').onclick = () => createCatDialog(S.type);
+
+  $('#prevPeriod').onclick = () => shiftRange(-1);
+  $('#nextPeriod').onclick = () => shiftRange(1);
+  $$('#periodSeg button').forEach(b => b.onclick = () => setRange(b.dataset.range));
+  $('#applyRange').onclick = () => {
+    const f = $('#fromDate').value;
+    const t = $('#toDate').value;
+    if (!f || !t) { uiToast('请选开始和结束日期', 'err'); return; }
+    if (f > t) { uiToast('开始日期不能晚于结束日期', 'err'); return; }
+    S.range = 'custom'; S.from = f; S.to = t;
+    $$('#periodSeg button').forEach(x => x.classList.toggle('on', x.dataset.range === 'custom'));
+    loadRange().catch(err => uiToast(err.message, 'err'));
+  };
+  $('#exportBtn').onclick = () => exportCsv('range');
+  $('#exportAll').onclick = () => exportCsv('all');
+  $('#summaryBtn').onclick = () => aiSummary();
+  $('#summaryClose').onclick = () => { $('#summaryCard').style.display = 'none'; };
+  $('#syncNote').onclick = () => flushOutbox(false);
+
+  let qTimer = null;
+  $('#searchInput').addEventListener('input', (e) => {
+    clearTimeout(qTimer);
+    qTimer = setTimeout(() => {
+      S.q = e.target.value.trim();
+      loadRange().catch(err => uiToast(err.message, 'err'));
+    }, 320);
+  });
+
+  $('#billRows').addEventListener('click', onBillAction);
+  $('#addDraftBtn').onclick = () => addDraft();
+  $('#drafts').addEventListener('click', onDraftClick);
+  $('#drafts').addEventListener('input', onDraftInput);
+  $('#drafts').addEventListener('change', onDraftChange);
+  $('#createCat').onclick = () => createCat();
+  $('#catList').addEventListener('click', onCatDelete);
+}
+
+function switchTab(tab) {
+  $$('.nav-item[data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
+  $$('.panel').forEach(p => p.classList.toggle('on', p.id === 'panel-' + tab));
+
+  const meta = {
+    write: ['记一笔', '写一句话，AI 帮你拆金额、商家和分类'],
+    bills: ['账单与统计', '每一笔都算得清，趋势、结构、明细一目了然'],
+    cats: ['分类管理', '系统分类 + 你自己的分类，AI 也会帮你补']
+  }[tab] || ['记账本', ''];
+  $('#pageTitle').textContent = meta[0];
+  $('#pageSub').textContent = meta[1];
+}
+
+function setMode(mode) {
+  S.mode = mode;
+  $$('#modeSeg button').forEach(b => b.classList.toggle('on', b.dataset.mode === mode));
+  $('#mode-ai').style.display = mode === 'ai' ? '' : 'none';
+  $('#mode-manual').style.display = mode === 'manual' ? '' : 'none';
+}
+
+/* ---------------- 数据 ---------------- */
+
+async function loadCats() {
+  S.cats = await req('/api/categories');
+  renderManualCats();
+  renderCats();
+}
+
+async function loadRange() {
+  const r = rangeOf();
+  S.from = r.from;
+  S.to = r.to;
+  S.rangeLabel = r.label;
+
+  const qs = 'from=' + r.from + '&to=' + r.to +
+    (S.q ? '&q=' + encodeURIComponent(S.q) : '') + '&limit=1000';
+  const [rep, txs] = await Promise.all([
+    req('/api/report?from=' + r.from + '&to=' + r.to),
+    req('/api/transactions?' + qs)
+  ]);
+  S.report = rep;
+  S.txs = txs || [];
+  renderAll();
+}
+
+function setRange(kind) {
+  S.range = kind;
+  $$('#periodSeg button').forEach(b => b.classList.toggle('on', b.dataset.range === kind));
+  const custom = kind === 'custom';
+  $('#rangeDates').style.display = custom ? '' : 'none';
+  if (custom) {
+    if (!$('#fromDate').value) $('#fromDate').value = S.from || todayIso();
+    if (!$('#toDate').value) $('#toDate').value = S.to || todayIso();
+    return;
+  }
+  loadRange().catch(err => uiToast(err.message, 'err'));
+}
+
+function shiftRange(dir) {
+  if (S.range === 'month') {
+    const next = shiftMonth(S.month, dir);
+    if (dir > 0 && next > monthNow()) return;
+    S.month = next;
+  } else if (S.range === 'year') {
+    if (dir > 0 && S.year >= new Date().getFullYear()) return;
+    S.year += dir;
+  } else if (S.range === 'day') {
+    const next = addDays(S.anchor, dir);
+    if (next > todayIso()) return;
+    S.anchor = next;
+  } else if (S.range === 'week') {
+    const next = addDays(S.anchor, dir * 7);
+    if (next > todayIso()) return;
+    S.anchor = next;
+  } else {
+    return;
+  }
+  loadRange().catch(err => uiToast(err.message, 'err'));
+}
+
+function renderAll() {
+  const rep = S.report;
+  if (!rep) return;
+  const prefix = KP[S.range] || '区间';
+
+  $('#monthTag').textContent = S.rangeLabel;
+  $('#rangeLabel').textContent = S.rangeLabel;
+  $('#billCount').textContent = rep.count + ' 笔';
+  $('#expenseTotalTag').textContent = '¥' + yuan(rep.expense);
+  $('#nextPeriod').disabled = (S.range === 'month' && S.month >= monthNow()) ||
+    (S.range === 'year' && S.year >= new Date().getFullYear()) ||
+    ((S.range === 'day' || S.range === 'week') && S.from >= todayIso()) ||
+    S.range === 'custom';
+  $('#prevPeriod').disabled = S.range === 'custom';
+
+  renderKpis($('#writeKpis'), rep, prefix);
+  renderKpis($('#billKpis'), rep, prefix);
+  renderMiniDonut(rep, prefix);
+  renderDonut(rep);
+  renderTrend(rep);
+  renderDay(rep);
+  renderMerchants(rep);
+  renderCatBars(rep);
+  renderBills();
+  renderRecent();
+}
+
+/* ---------------- KPI ---------------- */
+
+function kpiCard(k, cls, value, prevText, delta, spark) {
+  return '<div class="kpi ' + cls + '">' +
+    '<div class="kpi-k">' + k + (delta ? '<span class="kpi-d ' + (delta.dir > 0 ? 'up' : delta.dir < 0 ? 'down' : '') + '">' + delta.text + '</span>' : '') + '</div>' +
+    '<div class="kpi-v">' + value + '</div>' +
+    '<div class="kpi-foot">' + (prevText || '') + (spark || '') + '</div></div>';
+}
+
+function renderKpis(el, rep, prefix) {
+  prefix = prefix || '本月';
+  const prevBalance = (rep.prevIncome || 0) - (rep.prevExpense || 0);
+  const balance = (rep.income || 0) - (rep.expense || 0);
+  const sparkOut = sparkSvg((rep.trend || []).map(t => t.expense), '#D9552F');
+  const sparkIn = sparkSvg((rep.trend || []).map(t => t.income), '#4C9A6E');
+
+  el.innerHTML =
+    kpiCard(prefix + '支出', 'expense', moneyText(rep.expense), '上一段 ' + moneyText(rep.prevExpense),
+      deltaText(rep.expense, rep.prevExpense), sparkOut) +
+    kpiCard(prefix + '收入', 'income', moneyText(rep.income), '上一段 ' + moneyText(rep.prevIncome),
+      deltaText(rep.income, rep.prevIncome), sparkIn) +
+    kpiCard(prefix + '结余', 'balance', moneyText(balance), '上一段 ' + moneyText(prevBalance),
+      deltaText(balance, prevBalance), '') +
+    kpiCard('记账笔数', 'count', rep.count + ' 笔', '上一段 ' + rep.prevCount + ' 笔',
+      deltaText(rep.count, rep.prevCount), '');
+}
+
+/* ---------------- 图表 ---------------- */
+
+function expenseSlices(rep) {
+  const cats = (rep.byCategory || []).filter(c => c.type === 'expense' && c.total > 0);
+  const top = cats.slice(0, 5).map(c => ({
+    label: catOf(S.cats, c.category).name,
+    icon: catOf(S.cats, c.category).icon,
+    value: c.total,
+    color: colorFor(c.category)
+  }));
+  const rest = cats.slice(5).reduce((s, c) => s + c.total, 0);
+  if (rest > 0) top.push({ label: '其他', icon: '…', value: rest, color: '#C9BBA8' });
+  return top;
+}
+
+function renderMiniDonut(rep, prefix) {
+  prefix = prefix || '本月';
+  const slices = expenseSlices(rep);
+  $('#miniSub').textContent = slices.length ? (slices.length > 3 ? 'Top 3 · 共 ' + slices.length + ' 类' : '共 ' + slices.length + ' 类') : '还没有支出';
+  $('#miniDonut').innerHTML = slices.length
+    ? donutSvg(slices, { size: 150, thickness: 15, center: '¥' + yuan(rep.expense).split('.')[0], sub: prefix + '支出' })
+    : '<div class="empty">还没有支出</div>';
+
+  $('#miniLegend').innerHTML = slices.slice(0, 3).map(s =>
+    '<div class="legend-row"><i class="dotc" style="background:' + s.color + '"></i>' +
+    '<span class="lg-name">' + esc(s.label) + '</span>' +
+    '<span class="lg-amt">¥' + yuan(s.value) + '</span></div>').join('');
+}
+
+function renderDonut(rep) {
+  const slices = expenseSlices(rep);
+  const total = rep.expense || 0;
+
+  $('#donut').innerHTML = slices.length
+    ? donutSvg(slices, { size: 200, thickness: 20, center: '¥' + yuan(total), sub: '总支出' })
+    : '<div class="empty">还没有支出</div>';
+
+  $('#legend').innerHTML = slices.map(s =>
+    '<div class="legend-row"><i class="dotc" style="background:' + s.color + '"></i>' +
+    '<span class="lg-name">' + esc((s.icon ? s.icon + ' ' : '') + s.label) + '</span>' +
+    '<span class="lg-amt">¥' + yuan(s.value) + '</span>' +
+    '<span class="lg-pct">' + pctOf(s.value, total) + '%</span></div>').join('');
+}
+
+function renderTrend(rep) {
+  const rows = (rep.trend || []).map(t => ({ label: t.month, expense: t.expense, income: t.income }));
+  const long = (rep.days || 0) > 62;
+  $('#trendTitle').textContent = long ? '月度收支趋势' : '近 6 个月收支';
+  $('#trendHint').textContent = long ? '这段区间按月的支出与收入' : '长期趋势比单月更能说明问题';
+  $('#trendChart').innerHTML = barsSvg(rows);
+}
+
+function renderDay(rep) {
+  if ((rep.days || 0) > 62) {
+    $('#dayTitle').textContent = '月度收支';
+    $('#dayHint').textContent = '区间太长，按天太碎，改为按月看';
+    $('#dayChart').innerHTML = barsSvg((rep.trend || []).map(t => ({ label: t.month, expense: t.expense, income: t.income })));
+    $('#peakTag').textContent = '';
+    return;
+  }
+
+  const map = {};
+  (rep.byDay || []).forEach(d => { map[d.day] = d; });
+  const list = [];
+  let peak = null;
+  for (let day = rep.from; day <= rep.to; day = addDays(day, 1)) {
+    const row = map[day] || { expense: 0, income: 0 };
+    list.push({ day: day, expense: row.expense, income: row.income });
+    if (!peak || row.expense > peak.expense) peak = { day: day, expense: row.expense };
+  }
+
+  $('#dayTitle').textContent = '每日支出';
+  $('#dayHint').textContent = rep.days <= 1 ? '今天花了多少' : '哪几天花得多';
+  $('#dayChart').innerHTML = dayBarsSvg(list);
+  $('#peakTag').textContent = peak && peak.expense
+    ? '最高：' + Number(peak.day.slice(8)) + ' 日 ¥' + yuan(peak.expense)
+    : '这段还没有支出';
+}
+
+function renderMerchants(rep) {
+  const list = rep.topMerchants || [];
+  if (!list.length) {
+    $('#merchants').innerHTML = '<div class="empty">还没有支出</div>';
+    return;
+  }
+  const max = Math.max.apply(null, list.map(x => x.total).concat([1]));
+  $('#merchants').innerHTML = list.map((m, i) =>
+    '<div class="merchant-row">' +
+    '<span class="rank ' + (i < 3 ? 'top' : '') + '">' + (i + 1) + '</span>' +
+    '<span class="m-name">' + esc(m.name) + '<em>' + m.n + ' 笔</em></span>' +
+    '<span class="m-bar"><i style="width:' + Math.round((m.total / max) * 100) + '%"></i></span>' +
+    '<span class="m-amt">¥' + yuan(m.total) + '</span></div>').join('');
+}
+
+function renderCatBars(rep) {
+  const list = (rep.byCategory || []).slice().sort((a, b) => b.total - a.total).slice(0, 8);
+  if (!list.length) {
+    $('#catBars').innerHTML = '<div class="empty">还没有数据</div>';
+    return;
+  }
+  const max = Math.max.apply(null, list.map(x => x.total).concat([1]));
+  $('#catBars').innerHTML = list.map(c => {
+    const cat = catOf(S.cats, c.category);
+    return '<div class="cat-row">' +
+      '<div class="cat-row-top"><span>' + esc((cat.icon || '') + ' ' + cat.name) +
+      '<em class="' + (c.type === 'income' ? 'in' : '') + '">' + (c.type === 'income' ? '收入' : '支出') + '</em></span>' +
+      '<b>¥' + yuan(c.total) + '</b></div>' +
+      '<div class="bar"><i style="width:' + Math.round((c.total / max) * 100) + '%;background:' + colorFor(c.category) + '"></i></div>' +
+      '</div>';
+  }).join('');
+}
+
+/* ---------------- 明细 ---------------- */
+
+function renderBills() {
+  const rows = S.txs || [];
+  $('#billEmpty').style.display = rows.length ? 'none' : '';
+  $('#billHint').textContent = rows.length
+    ? '共 ' + rows.length + ' 笔 · ' + (S.q ? '搜索「' + S.q + '」' : '按时间倒序')
+    : (S.q ? '没有搜到「' + S.q + '」相关的账目' : '按时间倒序');
+
+  $('#billRows').innerHTML = rows.map(t => {
+    const cat = catOf(S.cats, t.category);
+    const title = t.note || t.merchant || cat.name;
+    return '<tr>' +
+      '<td class="muted">' + dayText(t.occurredAt) + '</td>' +
+      '<td><span class="row-title"><i class="dotc" style="background:' + colorFor(t.category) + '"></i>' + esc(title) + '</span>' +
+      (t.merchant && t.note ? '<div class="row-sub">' + esc(t.merchant) + '</div>' : '') + '</td>' +
+      '<td><span class="cat-pill"><span>' + esc(cat.icon || '✨') + '</span>' + esc(cat.name) + '</span></td>' +
+      '<td class="num ' + (t.type === 'income' ? 'in' : '') + '">' +
+      (t.type === 'income' ? '+' : '−') + '¥' + yuan(t.amount) + '</td>' +
+      '<td><div class="row-actions">' +
+      '<button class="tx-edit" data-edit="' + t.id + '" title="修改">✎</button>' +
+      '<button class="tx-del" data-del="' + t.id + '" title="删除">✕</button></div></td>' +
+      '</tr>';
+  }).join('');
+}
+
+async function onBillAction(e) {
+  const edit = e.target.closest('[data-edit]');
+  if (edit) { openEdit(Number(edit.dataset.edit)); return; }
+
+  const btn = e.target.closest('[data-del]');
+  if (!btn) return;
+  const ok = await uiConfirm({ title: '删除这笔账？', text: '删除后不可恢复。', danger: true, ok: '删除' });
+  if (!ok) return;
+  try {
+    await req('/api/transactions/' + btn.dataset.del, { method: 'DELETE' });
+    uiToast('已删除', 'ok');
+    await loadRange();
+    renderRecent();
+  } catch (err) {
+    uiToast('删除失败：' + err.message, 'err');
+  }
+}
+
+/* 改一笔：金额/类型/分类/备注/时间都能调 */
+async function openEdit(id) {
+  const t = S.txs.find(x => x.id === id);
+  if (!t) return;
+
+  const handle = await uiModal(
+    '<h3>修改这笔账</h3>' +
+    '<div class="modal-body edit-grid">' +
+    '<label class="field"><span>金额</span><input id="eAmount" type="number" min="0" step="0.01" inputmode="decimal" value="' + (t.amount / 100).toFixed(2) + '" /></label>' +
+    '<label class="field"><span>类型</span><select id="eType"><option value="expense"' + (t.type === 'expense' ? ' selected' : '') + '>支出</option><option value="income"' + (t.type === 'income' ? ' selected' : '') + '>收入</option></select></label>' +
+    '<label class="field"><span>分类</span><select id="eCat"></select></label>' +
+    '<label class="field"><span>时间</span><input id="eTime" type="datetime-local" value="' + String(t.occurredAt).slice(0, 16) + '" /></label>' +
+    '<label class="field" style="grid-column:1/-1"><span>备注</span><input id="eNote" maxlength="500" value="' + esc(t.note || '') + '" /></label>' +
+    '<label class="field" style="grid-column:1/-1"><span>商家</span><input id="eMerchant" maxlength="128" value="' + esc(t.merchant || '') + '" /></label>' +
+    '</div>' +
+    '<div class="modal-actions"><button class="btn ghost" data-cancel>取消</button><button class="btn" data-ok>保存</button></div>',
+    {}
+  );
+
+  const fillCats = () => {
+    const type = handle.root.querySelector('#eType').value;
+    const sel = handle.root.querySelector('#eCat');
+    sel.innerHTML = S.cats.filter(c => c.type === type).map(c =>
+      '<option value="' + c.id + '"' + (c.id === t.category ? ' selected' : '') + '>' +
+      esc((c.icon || '') + ' ' + c.name) + '</option>').join('');
+  };
+  fillCats();
+  handle.root.querySelector('#eType').onchange = fillCats;
+  handle.root.querySelector('[data-cancel]').onclick = () => handle.close(null);
+
+  handle.root.querySelector('[data-ok]').onclick = async () => {
+    const amount = parseYuan(handle.root.querySelector('#eAmount').value);
+    if (!amount || amount <= 0) { uiToast('金额要大于 0', 'err'); return; }
+    const time = handle.root.querySelector('#eTime').value;
+    const body = {
+      type: handle.root.querySelector('#eType').value,
+      amount,
+      category: handle.root.querySelector('#eCat').value,
+      note: handle.root.querySelector('#eNote').value.trim() || null,
+      merchant: handle.root.querySelector('#eMerchant').value.trim() || null,
+      occurredAt: time ? time.replace('T', ' ') : null
+    };
+    try {
+      await req('/api/transactions/' + id, { method: 'PATCH', body });
+      handle.close(true);
+      uiToast('已保存', 'ok');
+      await loadRange();
+      renderRecent();
+    } catch (err) {
+      uiToast('保存失败：' + err.message, 'err');
+    }
+  };
+}
+
+function renderRecent() {
+  const rows = (S.txs || []).slice(0, 6);
+  if (!rows.length) {
+    $('#recent').innerHTML = '<div class="empty">还没有记录</div>';
+    return;
+  }
+  $('#recent').innerHTML = rows.map(t => {
+    const cat = catOf(S.cats, t.category);
+    return '<div class="tx">' +
+      '<div class="tx-ico" style="background:' + colorFor(t.category) + '1a">' + esc(cat.icon || '✨') + '</div>' +
+      '<div class="tx-main"><div class="tx-title">' + esc(t.note || t.merchant || cat.name) + '</div>' +
+      '<div class="tx-sub">' + dayText(t.occurredAt) + ' · ' + esc(cat.name) + '</div></div>' +
+      '<div class="tx-amt ' + (t.type === 'income' ? 'in' : '') + '">' +
+      (t.type === 'income' ? '+' : '−') + '¥' + yuan(t.amount) + '</div></div>';
+  }).join('');
+}
+
+/* ---------------- AI 解析 ---------------- */
+
+async function doParse() {
+  const text = ($('#text').value || '').trim();
+  if (!text) return;
+
+  const btn = $('#parseBtn');
+  btn.disabled = true;
+  btn.textContent = '解析中…';
+  try {
+    const res = await req('/api/parse', { method: 'POST', body: { text } });
+    S.raw = res.raw || '';
+    S.model = res.model || '';
+    S.edited = false;
+    S.pendingText = text;
+    S.draft = (res.items || []).map(it => Object.assign({}, it));
+
+    if (res.createdCategories && res.createdCategories.length) {
+      $('#createdTip').style.display = '';
+      $('#createdTip').textContent = 'AI 新建了分类：' + res.createdCategories.join('、') + '，已加入分类列表。';
+      await loadCats();
+    } else {
+      $('#createdTip').style.display = 'none';
+    }
+
+    renderDrafts();
+    if (!S.draft.length) uiToast('没看出是记账，换个说法试试', 'err');
+  } catch (err) {
+    if (isNetworkError(err)) uiToast('连不上服务器，先用「手动记账」记下这一笔', 'err');
+    else uiToast('解析失败：' + err.message, 'err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '解析';
+    loadQuota();
+  }
+}
+
+function renderDrafts() {
+  const box = $('#drafts');
+  $('#aiActions').style.display = S.draft.length ? '' : 'none';
+  if (!S.draft.length) { box.innerHTML = ''; return; }
+
+  box.innerHTML = S.draft.map((d, i) => {
+    const cat = catOf(S.cats, d.category);
+    const options = S.cats.filter(c => c.type === d.type).map(c =>
+      '<option value="' + c.id + '"' + (c.id === d.category ? ' selected' : '') + '>' +
+      esc((c.icon || '') + ' ' + c.name) + '</option>').join('');
+
+    return '<div class="draft">' +
+      '<div class="draft-top">' +
+      '<span class="draft-ico" style="background:' + colorFor(d.category) + '1a">' + esc(cat.icon || '✨') + '</span>' +
+      '<div class="draft-amt"><span class="sym">¥</span>' +
+      '<input type="number" min="0" step="0.01" inputmode="decimal" data-amt="' + i + '" value="' + (d.amount / 100).toFixed(2) + '" /></div>' +
+      '<span class="tag ' + (d.type === 'income' ? 'on' : '') + '">' + (d.type === 'income' ? '收入' : '支出') + '</span>' +
+      '<button class="tx-del" data-drop="' + i + '" title="移除">✕</button>' +
+      '</div>' +
+      '<div class="draft-foot">' +
+      '<select data-cat="' + i + '">' + options + '</select>' +
+      '<input type="text" data-note="' + i + '" maxlength="60" placeholder="备注" value="' + esc(d.note || '') + '" />' +
+      '<span class="draft-time">' + dayText(d.occurredAt) + '</span>' +
+      '</div></div>';
+  }).join('');
+}
+
+function onDraftInput(e) {
+  const t = e.target;
+  if (t.dataset.amt != null) {
+    const v = parseYuan(t.value);
+    S.draft[Number(t.dataset.amt)].amount = v == null ? 0 : v;
+    S.edited = true;
+  } else if (t.dataset.note != null) {
+    S.draft[Number(t.dataset.note)].note = t.value;
+    S.edited = true;
+  }
+}
+
+function onDraftClick(e) {
+  const drop = e.target.closest('[data-drop]');
+  if (drop) {
+    S.draft.splice(Number(drop.dataset.drop), 1);
+    renderDrafts();
+    return;
+  }
+}
+
+function onDraftChange(e) {
+  const sel = e.target.closest('[data-cat]');
+  if (!sel) return;
+  S.draft[Number(sel.dataset.cat)].category = sel.value;
+  S.edited = true;
+}
+
+async function saveDrafts() {
+  if (!S.draft.length) return;
+  if (S.draft.some(d => !d.amount || d.amount <= 0)) {
+    uiToast('请先填写每笔金额', 'err');
+    return;
+  }
+  const btn = $('#saveBtn');
+  btn.disabled = true;
+  const body = {
+    items: S.draft.map(d => ({
+      type: d.type, amount: d.amount, category: d.category,
+      merchant: d.merchant || null, note: d.note || null, occurredAt: d.occurredAt
+    })),
+    text: S.pendingText, raw: S.raw, model: S.model,
+    edited: S.edited, source: 'text'
+  };
+
+  try {
+    await req('/api/transactions/batch', { method: 'POST', body: body });
+    uiToast('已入账 ' + S.draft.length + ' 笔', 'ok');
+    S.draft = [];
+    S.pendingText = '';
+    $('#text').value = '';
+    $('#createdTip').style.display = 'none';
+    renderDrafts();
+    await loadRange();
+    renderRecent();
+    loadQuota();
+  } catch (err) {
+    if (isNetworkError(err)) {
+      /* 后端不可达：先落本地，联网后由 flushOutbox 补推 */
+      outboxAdd({ id: 'tx_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7), at: new Date().toISOString(), body: body });
+      S.outbox = outboxAll();
+      syncBadge();
+      uiToast('连不上服务器，已先存到本地，恢复后自动同步', 'warn');
+      S.draft = [];
+      S.pendingText = '';
+      $('#text').value = '';
+      renderDrafts();
+    } else {
+      uiToast('入账失败：' + err.message, 'err');
+    }
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+/* ---------------- 手动记账 ---------------- */
+
+function renderManualCats() {
+  const sel = $('#mCat');
+  const cur = sel.value;
+  sel.innerHTML = S.cats.filter(c => c.type === S.type).map(c =>
+    '<option value="' + c.id + '">' + esc((c.icon || '') + ' ' + c.name) + '</option>').join('');
+  if (cur && S.cats.some(c => c.id === cur && c.type === S.type)) sel.value = cur;
+}
+
+function catOptions(type, selected) {
+  return S.cats.filter(c => c.type === type).map(c =>
+    '<option value="' + c.id + '"' + (c.id === selected ? ' selected' : '') + '>' +
+    esc((c.icon || '') + ' ' + c.name) + '</option>').join('');
+}
+
+async function saveManual() {
+  const amount = parseYuan($('#mAmount').value);
+  const note = ($('#mNote').value || '').trim();
+  const date = $('#mDate').value || new Date().toISOString().slice(0, 10);
+  const cat = $('#mCat').value || (S.type === 'income' ? 'other_inc' : 'other_exp');
+
+  if (!amount || amount <= 0) { uiToast('请输入金额', 'err'); $('#mAmount').focus(); return; }
+
+  const now = new Date();
+  const hhmm = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+  const body = {
+    items: [{ type: S.type, amount, category: cat, merchant: null, note: note || null, occurredAt: date + 'T' + hhmm + ':00+08:00' }],
+    text: '', raw: '', model: '', edited: true, source: 'manual'
+  };
+
+  try {
+    await req('/api/transactions/batch', { method: 'POST', body: body });
+    uiToast('记下了', 'ok');
+  } catch (err) {
+    if (isNetworkError(err)) {
+      outboxAdd({ id: 'tx_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7), at: new Date().toISOString(), body: body });
+      S.outbox = outboxAll();
+      syncBadge();
+      uiToast('连不上服务器，已先存到本地，恢复后自动同步', 'warn');
+    } else {
+      uiToast('保存失败：' + err.message, 'err');
+      return;
+    }
+  }
+
+  $('#mAmount').value = '';
+  $('#mNote').value = '';
+  $('#mDate').value = new Date().toISOString().slice(0, 10);
+  try { await loadRange(); renderRecent(); } catch (e) { /* 离线时列表留着旧数据 */ }
+}
+
+/* ---------------- 分类管理 ---------------- */
+
+function renderCats() {
+  const box = $('#catList');
+  if (!S.cats.length) { box.innerHTML = '<div class="empty">还没有分类</div>'; return; }
+  box.innerHTML = S.cats.map(c =>
+    '<div class="cat-item">' +
+    '<span class="ci" style="background:' + colorFor(c.id) + '1a">' + esc(c.icon || '✨') + '</span>' +
+    '<span class="cn">' + esc(c.name) + '</span>' +
+    '<span class="tag ' + (c.custom ? '' : 'off') + '">' + (c.custom ? '自建' : '系统') + '</span>' +
+    (c.custom ? '<button class="tx-del" data-cat="' + c.id + '" title="删除分类">✕</button>' : '') +
+    '</div>').join('');
+}
+
+async function createCat() {
+  const name = ($('#cName').value || '').trim();
+  const type = $('#cType').value;
+  const icon = ($('#cIcon').value || '').trim() || '✨';
+  if (!name) { uiToast('请输入分类名称', 'err'); return; }
+
+  try {
+    await req('/api/categories', { method: 'POST', body: { name, type, icon } });
+    $('#cName').value = '';
+    $('#cIcon').value = '';
+    await loadCats();
+    uiToast('分类已添加', 'ok');
+  } catch (err) {
+    uiToast('添加失败：' + err.message, 'err');
+  }
+}
+
+async function createCatDialog(type) {
+  const handle = await uiModal(
+    '<h3>新建分类</h3>' +
+    '<div class="modal-body"><label class="field"><span>名称</span><input id="dcName" maxlength="12" placeholder="例如：宠物" /></label>' +
+    '<label class="field" style="margin-top:12px"><span>图标</span><input id="dcIcon" maxlength="4" placeholder="🐱" /></label></div>' +
+    '<div class="modal-actions"><button class="btn ghost" data-cancel>取消</button><button class="btn" data-ok>创建</button></div>',
+    {}
+  );
+
+  handle.root.querySelector('[data-cancel]').onclick = () => handle.close(null);
+  handle.root.querySelector('[data-ok]').onclick = async () => {
+    const name = (handle.root.querySelector('#dcName').value || '').trim();
+    const icon = (handle.root.querySelector('#dcIcon').value || '').trim() || '✨';
+    if (!name) { uiToast('请输入名称', 'err'); return; }
+    try {
+      await req('/api/categories', { method: 'POST', body: { name, type, icon } });
+      handle.close(true);
+      await loadCats();
+      renderManualCats();
+      uiToast('分类已添加', 'ok');
+    } catch (err) {
+      uiToast('添加失败：' + err.message, 'err');
+    }
+  };
+}
+
+async function onCatDelete(e) {
+  const btn = e.target.closest('[data-cat]');
+  if (!btn) return;
+  const ok = await uiConfirm({ title: '删除这个分类？', text: '已记账目不会受影响。', danger: true, ok: '删除' });
+  if (!ok) return;
+  try {
+    await req('/api/categories/' + btn.dataset.cat, { method: 'DELETE' });
+    await loadCats();
+    uiToast('已删除', 'ok');
+  } catch (err) {
+    uiToast('删除失败：' + err.message, 'err');
+  }
+}
+
+/* ---------------- AI 配额 / 总结 ---------------- */
+
+async function loadQuota() {
+  try {
+    const u = await req('/api/ai/usage');
+    $('#quotaHint').textContent = '今日解析 ' + u.parseUsed + '/' + u.parseLimit + ' · Ctrl / ⌘ + Enter 直接解析';
+  } catch (e) { /* 离线时保留默认文案 */ }
+}
+
+async function aiSummary() {
+  const btn = $('#summaryBtn');
+  btn.disabled = true;
+  btn.textContent = '分析中…';
+  try {
+    const res = await req('/api/ai/summary', { method: 'POST', body: { from: S.from, to: S.to } });
+    $('#summaryCard').style.display = '';
+    $('#summaryMeta').textContent = res.from + ' 至 ' + res.to + ' · ' + res.count + ' 笔 · ' + res.model +
+      ' · 今日总结 ' + res.summaryUsed + '/' + res.summaryLimit;
+    $('#summaryText').innerHTML = String(res.text || '').split(/\n+/).filter(Boolean)
+      .map(p => '<p>' + esc(p) + '</p>').join('');
+    $('#summaryCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  } catch (err) {
+    uiToast('AI 总结失败：' + err.message, 'err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'AI 总结这段';
+  }
+}
+
+/* ---------------- 本地待同步队列 ---------------- */
+
+function syncBadge() {
+  const n = outboxAll().length;
+  const el = $('#syncNote');
+  if (!n) { el.style.display = 'none'; return; }
+  el.style.display = '';
+  el.textContent = '⏳ ' + n + ' 笔待同步 · 点此重试';
+}
+
+/* silent=true 时不打扰用户（定时器调用） */
+async function flushOutbox(silent) {
+  let list = outboxAll();
+  if (!list.length) { syncBadge(); return; }
+  if (!navigator.onLine) { syncBadge(); return; }
+
+  let done = 0;
+  for (const entry of list) {
+    try {
+      await req('/api/transactions/batch', { method: 'POST', body: entry.body });
+      outboxRemove(entry.id);
+      done++;
+    } catch (err) {
+      if (isNetworkError(err)) break;            // 还是连不上，留着下次
+      outboxRemove(entry.id);                    // 数据本身有问题，丢弃并提示，避免死循环
+      uiToast('一条本地账目被服务器拒绝：' + err.message, 'err');
+    }
+  }
+  syncBadge();
+  if (done) {
+    uiToast('已同步 ' + done + ' 笔本地账目', 'ok');
+    try { await loadRange(); renderRecent(); } catch (e) { /* 忽略 */ }
+  } else if (!silent && !navigator.onLine) {
+    uiToast('现在还是离线，稍后会自动重试', 'warn');
+  }
+}
+
+/* AI 没解析出来的那笔，手动补一行 */
+function addDraft() {
+  const cat = (S.cats.find(c => c.type === 'expense') || { id: 'other_exp' }).id;
+  S.draft.push({
+    type: 'expense', amount: 0, category: cat,
+    merchant: null, note: '', occurredAt: new Date().toISOString()
+  });
+  S.edited = true;
+  renderDrafts();
+  const box = $('#drafts');
+  if (box.lastElementChild) box.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+/* ---------------- 导出 ---------------- */
+
+async function exportCsv(scope) {
+  const all = scope === 'all';
+  const qs = all ? 'month=all' : ('from=' + S.from + '&to=' + S.to);
+  const name = all ? '全部' : S.from + '_' + S.to;
+  try {
+    const res = await fetch('/api/transactions/export?' + qs, {
+      headers: { Authorization: 'Bearer ' + token() }
+    });
+    if (!res.ok) {
+      let msg = 'HTTP ' + res.status;
+      try { const data = await res.json(); msg = data.error || msg; } catch (e) { /* 非 JSON */ }
+      throw new Error(msg);
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = '账本-' + name + '.csv';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    /* 立刻 revoke 会让部分浏览器（含无头 Chrome）取消下载，留 10 秒 */
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+    uiToast('已导出' + (all ? '全部账单' : ' ' + S.rangeLabel + ' 账单'), 'ok');
+  } catch (err) {
+    uiToast('导出失败：' + err.message, 'err');
+  }
+}
+
+boot().catch(err => {
+  console.error(err);
+  uiToast('加载失败：' + err.message, 'err');
+});
+</script>
+</body>
+</html>

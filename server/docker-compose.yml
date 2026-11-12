@@ -1,0 +1,44 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: ledger-mysql
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ledger
+      MYSQL_USER: ledger
+      MYSQL_PASSWORD: ledger
+      TZ: Asia/Shanghai
+    ports: ["3306:3306"]
+    volumes: ["mysqldata:/var/lib/mysql"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+
+  app:
+    build: .
+    container_name: ledger-app
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/ledger?useUnicode=true&characterEncoding=utf8&connectionTimeZone=%2B08:00&forceConnectionTimeZoneToSession=true&allowPublicKeyRetrieval=true&useSSL=false"
+      SPRING_DATASOURCE_USERNAME: ledger
+      SPRING_DATASOURCE_PASSWORD: ledger
+      APP_SECRET: ${APP_SECRET}
+      APP_PUBLIC_URL: ${APP_PUBLIC_URL:-http://localhost:3000}
+      APP_ADMIN_EMAIL: ${APP_ADMIN_EMAIL:-}
+      JWT_SECRET: ${JWT_SECRET}
+      WX_APPID: ${WX_APPID}
+      WX_SECRET: ${WX_SECRET}
+      TZ: Asia/Shanghai
+    ports: ["3000:3000"]
+    restart: unless-stopped
+
+volumes:
+  mysqldata:

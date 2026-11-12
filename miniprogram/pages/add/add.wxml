@@ -1,0 +1,45 @@
+<view class="page">
+  <view class="seg">
+    <view class="seg-item {{type === 'expense' ? 'on' : ''}}" data-t="expense" bindtap="onType">支出</view>
+    <view class="seg-item {{type === 'income' ? 'on' : ''}}" data-t="income" bindtap="onType">收入</view>
+  </view>
+
+  <view class="amount-card card">
+    <text class="cur">¥</text>
+    <input class="amt" type="digit" placeholder="0.00" placeholder-class="amt-ph"
+      value="{{amount}}" bindinput="onAmount" />
+  </view>
+
+  <view class="sec">
+    <view class="sec-head">
+      <text>选择分类</text>
+      <text class="add" bindtap="onAddCategory">＋ 新建</text>
+    </view>
+
+    <view class="grid" wx:if="{{cats.length}}">
+      <view class="cell {{catId === item.id ? 'on' : ''}}" wx:for="{{cats}}" wx:key="id"
+        data-id="{{item.id}}" bindtap="onCat">
+        <text class="cio">{{item.icon}}</text>
+        <text class="cname">{{item.name}}</text>
+      </view>
+    </view>
+    <view class="empty" wx:else>还没有分类，点右上角新建一个</view>
+  </view>
+
+  <view class="fields">
+    <view class="field card">
+      <text class="fl">备注</text>
+      <input class="fi" placeholder="可选，比如 和朋友一起" value="{{note}}" bindinput="onNote" />
+    </view>
+    <picker mode="date" value="{{date}}" bindchange="onDate">
+      <view class="field card">
+        <text class="fl">日期</text>
+        <text class="fv">{{dateLabel}} ›</text>
+      </view>
+    </picker>
+  </view>
+
+  <view class="savebar">
+    <button class="btn-primary" loading="{{saving}}" bindtap="onSave">保存这笔</button>
+  </view>
+</view>

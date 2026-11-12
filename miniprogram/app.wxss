@@ -1,0 +1,52 @@
+page {
+  background: #F6F2EC;
+  color: #201D18;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+  font-size: 28rpx;
+  -webkit-font-smoothing: antialiased;
+}
+
+view, text, input, textarea, button {
+  box-sizing: border-box;
+}
+
+button::after {
+  border: 0;
+}
+
+.card {
+  background: #FFFFFF;
+  border-radius: 28rpx;
+  box-shadow: 0 10rpx 30rpx rgba(74, 54, 34, 0.06);
+}
+
+.muted {
+  color: #9A9186;
+}
+
+.income {
+  color: #2F8F62;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #E8703F 0%, #D9552F 100%);
+  color: #FFFFFF;
+  font-size: 30rpx;
+  font-weight: 600;
+  line-height: 1.4;
+  border-radius: 999rpx;
+  padding: 26rpx 0;
+  box-shadow: 0 12rpx 26rpx rgba(217, 85, 47, 0.28);
+}
+
+.btn-primary.button-hover {
+  opacity: 0.9;
+  transform: translateY(1rpx);
+}
+
+.empty {
+  text-align: center;
+  color: #B9AE9F;
+  font-size: 26rpx;
+  padding: 80rpx 0;
+}

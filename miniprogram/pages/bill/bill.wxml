@@ -1,0 +1,115 @@
+<view class="page">
+  <view class="pending-bar" wx:if="{{pending}}" bindtap="onSyncNow">
+    <text>⏳ {{pending}} 笔存在本地，联网后自动同步</text>
+    <text class="pending-act">立即同步</text>
+  </view>
+
+  <view class="seg period-seg">
+    <view wx:for="{{periods}}" wx:key="key"
+      class="seg-i {{period === item.key && !custom ? 'on' : ''}}"
+      data-p="{{item.key}}" bindtap="setPeriod">{{item.label}}</view>
+    <view class="seg-i {{custom ? 'on' : ''}}" bindtap="onCustom">自定义</view>
+  </view>
+
+  <view class="monthbar">
+    <view class="arrow" data-d="-1" bindtap="shift">‹</view>
+    <text class="mtitle">{{label}}</text>
+    <view class="arrow" data-d="1" bindtap="shift">›</view>
+  </view>
+
+  <view class="custom-dates" wx:if="{{custom}}">
+    <picker mode="date" value="{{from}}" bindchange="onFrom">
+      <view class="date-btn">{{from}}</view>
+    </picker>
+    <text class="dash">—</text>
+    <picker mode="date" value="{{to}}" bindchange="onTo">
+      <view class="date-btn">{{to}}</view>
+    </picker>
+  </view>
+
+  <view class="searchbox">
+    <text class="sicon">🔍</text>
+    <input class="sinput" value="{{q}}" placeholder="搜备注、商家、分类"
+      placeholder-class="sph" confirm-type="search" bindinput="onSearch" />
+    <text class="sclear" wx:if="{{q}}" bindtap="clearSearch">✕</text>
+  </view>
+
+  <view class="summary card">
+    <view class="srow">
+      <view class="scol">
+        <text class="sl">支出</text>
+        <text class="sv">¥{{out}}</text>
+      </view>
+      <view class="scol">
+        <text class="sl">收入</text>
+        <text class="sv income">¥{{in}}</text>
+      </view>
+      <view class="scol">
+        <text class="sl">结余</text>
+        <text class="sv">¥{{net}}</text>
+      </view>
+    </view>
+    <view class="count-line">共 {{count}} 笔</view>
+
+    <view class="bars" wx:if="{{tops.length}}">
+      <view class="bar-item" wx:for="{{tops}}" wx:key="category">
+        <view class="bi-top">
+          <text class="bi-name">{{item.icon}} {{item.name}}</text>
+          <text class="bi-num">¥{{item.totalYuan}}</text>
+        </view>
+        <view class="track">
+          <view class="fill" style="width: {{item.pct}}%"></view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="group" wx:for="{{groups}}" wx:key="day" wx:for-item="g">
+    <view class="gh">
+      <text class="gl">{{g.label}}</text>
+      <text class="gw">周{{g.weekday}}</text>
+      <text class="gd" wx:if="{{g.out > 0}}">支出 ¥{{g.outYuan}}</text>
+    </view>
+
+    <view class="card gcard">
+      <view class="grow" wx:for="{{g.items}}" wx:key="id"
+        data-id="{{item.id}}" bindtap="onTapItem">
+        <view class="ico">{{item.icon}}</view>
+        <view class="gmid">
+          <text class="gname">{{item.title}}</text>
+          <text class="gsub">{{item.catName}} · {{item.time}}</text>
+        </view>
+        <text class="gamt {{item.type === 'income' ? 'income' : ''}}">
+          {{item.type === 'income' ? '+' : '-'}}¥{{item.amountYuan}}
+        </text>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty" wx:if="{{!groups.length && !loading}}">
+    {{q ? '没找到匹配的账目' : '这个区间还没有账'}}
+  </view>
+
+  <view class="tip" wx:if="{{groups.length}}">点一笔可以改金额、改分类或删除</view>
+
+  <view class="logout" bindtap="onLogout">退出登录</view>
+  <view class="safe"></view>
+
+  <!-- 改分类浮层 -->
+  <view class="sheet-mask" wx:if="{{picker.show}}" bindtap="closePicker"></view>
+  <view class="sheet" wx:if="{{picker.show}}">
+    <view class="sheet-head">
+      <text class="sheet-title">换个分类</text>
+      <text class="sheet-done" bindtap="closePicker">完成</text>
+    </view>
+    <scroll-view class="sheet-body" scroll-y>
+      <view class="sheet-grid">
+        <view class="sheet-item" wx:for="{{picker.cats}}" wx:key="id"
+          data-id="{{item.id}}" bindtap="pickCat">
+          <text class="si-ico">{{item.icon || '✨'}}</text>
+          <text class="si-name">{{item.name}}</text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+</view>

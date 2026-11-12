@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>管理后台 · 记账本</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">账</div>
+      <div>
+        <div class="brand-name">记账本</div>
+        <span class="brand-sub">ADMIN</span>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <button class="nav-item on" data-tab="overview"><span class="dot"></span>概览</button>
+      <button class="nav-item" data-tab="users"><span class="dot"></span>用户</button>
+      <button class="nav-item" data-tab="llm"><span class="dot"></span>AI 模型</button>
+      <button class="nav-item" data-tab="audit"><span class="dot"></span>审计日志</button>
+    </nav>
+
+    <div class="sidebar-foot">
+      <div class="sidebar-user" id="who"></div>
+      <a class="nav-item" href="/app.html">回到账本</a>
+      <button class="nav-item" id="logoutBtn">退出登录</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1 id="pageTitle">概览</h1>
+        <p class="sub" id="pageSub">整个账本的运行情况</p>
+      </div>
+      <div class="top-actions"><span class="tag" id="roleTag">管理员</span></div>
+    </div>
+
+    <!-- 概览 -->
+    <section class="panel on" id="panel-overview">
+      <div class="stats" id="stats"></div>
+      <div class="card">
+        <div class="card-head">
+          <h2>最近操作</h2>
+          <button class="btn ghost sm" data-tab="audit">查看全部</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>时间</th><th>操作</th><th>对象</th><th>详情</th><th>操作人</th><th>IP</th></tr></thead>
+            <tbody id="recentLogs"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 用户 -->
+    <section class="panel" id="panel-users">
+      <div class="card">
+        <div class="card-head">
+          <h2>用户</h2>
+          <div class="row">
+            <input id="userQ" type="text" placeholder="搜邮箱或昵称" style="width:220px">
+            <button class="btn ghost sm" id="searchUsers">搜索</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>邮箱 / 昵称</th><th>角色</th><th>状态</th><th>微信</th><th class="num">账目</th><th>注册时间</th><th style="width:220px">操作</th></tr>
+            </thead>
+            <tbody id="userRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- AI 模型 -->
+    <section class="panel" id="panel-llm">
+      <div class="card">
+        <div class="card-head">
+          <h2>已配置的模型</h2>
+          <span class="hint">解析按「默认优先」取前两个可用配置，失败自动降级</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>名称</th><th>接口地址</th><th>模型</th><th>API Key</th><th>状态</th><th style="width:250px">操作</th></tr>
+            </thead>
+            <tbody id="llmRows"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>添加模型</h2><span class="hint">支持任何 OpenAI 兼容接口</span></div>
+        <div class="grid-2">
+          <div class="field"><label for="lName">名称</label><input id="lName" placeholder="例如：DeepSeek"></div>
+          <div class="field"><label for="lBase">接口地址</label><input id="lBase" placeholder="https://api.deepseek.com"></div>
+          <div class="field"><label for="lModel">模型名</label><input id="lModel" placeholder="deepseek-chat"></div>
+          <div class="field"><label for="lKey">API Key</label><input id="lKey" type="password" placeholder="sk-..."></div>
+        </div>
+        <div class="row wrap" style="margin-top:16px;gap:18px">
+          <label class="row" style="gap:8px;font-size:13px;color:var(--ink)"><input type="checkbox" id="lDefault" style="width:auto"> 设为默认</label>
+          <label class="row" style="gap:8px;font-size:13px;color:var(--ink)"><input type="checkbox" id="lEnabled" checked style="width:auto"> 立即启用</label>
+        </div>
+        <div class="actions" style="margin-top:16px">
+          <button class="btn" id="createLlm">添加</button>
+        </div>
+        <p class="hint">提示：DeepSeek 的模型名是 deepseek-chat / deepseek-reasoner；「测试」只发一句普通对话，不会消耗解析额度。</p>
+      </div>
+    </section>
+
+    <!-- 审计 -->
+    <section class="panel" id="panel-audit">
+      <div class="card">
+        <div class="card-head"><h2>审计日志</h2><span class="hint">最近 100 条管理操作</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th style="width:150px">时间</th><th>操作</th><th>对象</th><th>详情</th><th>操作人</th><th>IP</th></tr></thead>
+            <tbody id="auditRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="/common.js"></script>
+<script>
+  const TITLES = {
+    overview: ['概览', '整个账本的运行情况'],
+    users: ['用户', '管理账号、角色与状态'],
+    llm: ['AI 模型', '配置解析用的 OpenAI 兼容接口'],
+    audit: ['审计日志', '谁在什么时候改了什么']
+  };
+
+  let users = [], configs = [], logs = [];
+
+  document.addEventListener('DOMContentLoaded', init);
+
+  async function init() {
+    if (!token()) { location.replace('/login.html'); return; }
+    wire();
+
+    let me;
+    try { me = await req('/auth/me'); } catch (e) { return; }
+    if (me.role !== 'admin') { location.replace('/app.html'); return; }
+    $('#who').textContent = me.email;
+
+    await Promise.all([loadStats(), loadLogs()]);
+  }
+
+  function wire() {
+    $$('.nav-item[data-tab]').forEach(b => b.onclick = () => switchTab(b.dataset.tab));
+    $('#logoutBtn').onclick = async () => {
+      if (await uiConfirm({ title: '退出登录', text: '需要重新登录才能进入后台。', ok: '退出' })) logout();
+    };
+
+    $('#userRows').addEventListener('click', onUserAction);
+    $('#searchUsers').onclick = () => loadUsers($('#userQ').value.trim());
+    $('#userQ').addEventListener('keydown', e => { if (e.key === 'Enter') loadUsers($('#userQ').value.trim()); });
+
+    $('#llmRows').addEventListener('click', onLlmAction);
+    $('#createLlm').onclick = createLlm;
+  }
+
+  function switchTab(tab) {
+    $$('.nav-item[data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
+    $$('.panel').forEach(p => p.classList.toggle('on', p.id === 'panel-' + tab));
+    $('#pageTitle').textContent = TITLES[tab][0];
+    $('#pageSub').textContent = TITLES[tab][1];
+    if (tab === 'users') loadUsers($('#userQ').value.trim());
+    if (tab === 'llm') loadConfigs();
+    if (tab === 'audit') loadLogs(true);
+  }
+
+  /* ---------------- 概览 ---------------- */
+
+  async function loadStats() {
+    const s = await req('/admin/stats');
+    $('#stats').innerHTML = `
+      <div class="stat"><div class="k">用户</div><div class="v">${s.users}</div></div>
+      <div class="stat"><div class="k">本月支出</div><div class="v accent">¥${money(s.month_expense_fen)}</div></div>
+      <div class="stat"><div class="k">账目总数</div><div class="v">${s.tx_count}</div></div>
+      <div class="stat"><div class="k">微信绑定 / 停用</div><div class="v small">${s.wx_bound} / ${s.disabled_users}</div></div>`;
+  }
+
+  async function loadLogs(all) {
+    logs = await req('/admin/audit-logs');
+    const rows = all ? logs : logs.slice(0, 6);
+    const html = rows.length ? rows.map(logRow).join('') : '<tr><td colspan="6" class="empty">还没有操作记录</td></tr>';
+    $('#auditRows').innerHTML = html;
+    $('#recentLogs').innerHTML = html;
+  }
+
+  function logRow(l) {
+    return `<tr>
+      <td class="sub" style="font-size:12.5px">${esc(dayText(l.created_at))}</td>
+      <td>${esc(l.action)}</td>
+      <td>${esc(l.target || '—')}</td>
+      <td class="sub">${esc(l.detail || '—')}</td>
+      <td>${esc(l.actor || '—')}</td>
+      <td class="sub">${esc(l.ip || '—')}</td>
+    </tr>`;
+  }
+
+  /* ---------------- 用户 ---------------- */
+
+  async function loadUsers(q) {
+    users = await req('/admin/users' + (q ? '?q=' + encodeURIComponent(q) : ''));
+    $('#userRows').innerHTML = users.length ? users.map(u => {
+      const wx = u.wx_bound === true || u.wx_bound === 1;
+      return `<tr>
+        <td>${esc(u.email)}<div class="sub">${esc(u.nickname || '—')}</div></td>
+        <td><span class="tag ${u.role === 'admin' ? 'admin' : ''}">${u.role === 'admin' ? '管理员' : '用户'}</span></td>
+        <td><span class="tag ${u.status === 'active' ? 'on' : 'off'}">${u.status === 'active' ? '正常' : '已停用'}</span></td>
+        <td>${wx ? '<span class="tag on">已绑定</span>' : '<span class="tag">未绑定</span>'}</td>
+        <td class="num">${u.tx_count}</td>
+        <td class="sub" style="font-size:12.5px">${esc(dayText(u.created_at))}</td>
+        <td>
+          <div class="row" style="gap:6px;flex-wrap:wrap">
+            <button class="btn ghost sm" data-role="${u.role === 'admin' ? 'user' : 'admin'}" data-id="${u.id}">${u.role === 'admin' ? '降为用户' : '设为管理员'}</button>
+            <button class="btn ghost sm" data-status="${u.status === 'active' ? 'disabled' : 'active'}" data-id="${u.id}">${u.status === 'active' ? '停用' : '启用'}</button>
+            <button class="btn ghost sm" data-reset="${u.id}">改密</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('') : '<tr><td colspan="7" class="empty">没有匹配的用户</td></tr>';
+  }
+
+  async function onUserAction(e) {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    const id = btn.dataset.id;
+
+    try {
+      if (btn.dataset.role) {
+        if (!await uiConfirm({ title: '调整角色', text: '确定要修改这个用户的角色吗？', ok: '确定' })) return;
+        await req('/admin/users/' + id, { method: 'PATCH', body: { role: btn.dataset.role } });
+        uiToast('角色已更新', 'ok');
+      } else if (btn.dataset.status) {
+        if (btn.dataset.status === 'disabled'
+          && !await uiConfirm({ title: '停用账号', text: '停用后该用户会被立刻踢下线，且无法登录。', ok: '停用', danger: true })) return;
+        await req('/admin/users/' + id, { method: 'PATCH', body: { status: btn.dataset.status } });
+        uiToast('状态已更新', 'ok');
+      } else if (btn.dataset.reset) {
+        if (!await uiConfirm({ title: '重置密码', text: '会生成一个临时密码，旧密码与旧令牌立即失效。', ok: '重置' })) return;
+        const res = await req('/admin/users/' + id + '/reset-password', { method: 'POST' });
+        showTempPassword(res.tempPassword);
+        return;
+      }
+      await Promise.all([loadUsers($('#userQ').value.trim()), loadStats(), loadLogs()]);
+    } catch (err) {
+      uiToast(ERROR_TEXT[err.code] || ('操作失败：' + err.code), 'err');
+    }
+  }
+
+  const ERROR_TEXT = {
+    CANNOT_DEMOTE_SELF: '不能修改自己的角色或停用自己',
+    BAD_ROLE: '角色不合法',
+    BAD_STATUS: '状态不合法'
+  };
+
+  async function showTempPassword(pwd) {
+    const m = await uiModal(`
+      <h3>临时密码</h3>
+      <div class="modal-text">把这个密码发给用户，登录后请尽快修改。</div>
+      <div class="modal-body" style="background:var(--soft);border-radius:10px;padding:14px 16px;font-family:ui-monospace,Consolas,monospace;font-size:18px;letter-spacing:.04em">${esc(pwd)}</div>
+      <div class="modal-actions"><button class="btn" data-close>知道了</button></div>`);
+    $('[data-close]', m.root).onclick = () => m.close(true);
+  }
+
+  /* ---------------- 模型 ---------------- */
+
+  async function loadConfigs() {
+    configs = await req('/admin/llm-configs');
+    $('#llmRows').innerHTML = configs.length ? configs.map(c => `
+      <tr>
+        <td>${esc(c.name)}${c.is_default ? ' <span class="tag default">默认</span>' : ''}</td>
+        <td class="sub" style="font-size:12.5px">${esc(c.base_url)}</td>
+        <td><span class="tag">${esc(c.model)}</span></td>
+        <td class="sub">${esc(c.api_key_hint || '—')}</td>
+        <td><span class="tag ${c.enabled ? 'on' : 'off'}">${c.enabled ? '启用' : '停用'}</span></td>
+        <td>
+          <div class="row" style="gap:6px;flex-wrap:wrap">
+            <button class="btn ghost sm" data-test="${c.id}">测试</button>
+            ${c.is_default ? '' : `<button class="btn ghost sm" data-default="${c.id}">设默认</button>`}
+            <button class="btn ghost sm" data-enabled="${c.enabled ? 0 : 1}" data-id="${c.id}">${c.enabled ? '停用' : '启用'}</button>
+            <button class="btn ghost sm" data-del="${c.id}">删除</button>
+          </div>
+        </td>
+      </tr>`).join('') : '<tr><td colspan="6" class="empty">还没有配置模型，先在下面添加一个</td></tr>';
+  }
+
+  async function onLlmAction(e) {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    const id = btn.dataset.test || btn.dataset.default || btn.dataset.id || btn.dataset.del;
+
+    try {
+      if (btn.dataset.test) {
+        btn.disabled = true; btn.textContent = '测试中…';
+        try {
+          const r = await req('/admin/llm-configs/' + id + '/test', { method: 'POST' });
+          uiToast('连接正常 · ' + r.latencyMs + 'ms · 回复「' + r.reply + '」', 'ok');
+        } catch (err) {
+          uiToast('测试失败：' + (UI_ERROR[err.code] || err.code), 'err');
+        } finally {
+          btn.disabled = false; btn.textContent = '测试';
+        }
+        return;
+      }
+      if (btn.dataset.default) {
+        await req('/admin/llm-configs/' + id, { method: 'PATCH', body: { isDefault: true } });
+        uiToast('已设为默认', 'ok');
+      } else if (btn.dataset.enabled) {
+        await req('/admin/llm-configs/' + id, { method: 'PATCH', body: { enabled: btn.dataset.enabled === '1' } });
+        uiToast('已更新', 'ok');
+      } else if (btn.dataset.del) {
+        if (!await uiConfirm({ title: '删除模型', text: '删除后解析将不再使用这个配置。', ok: '删除', danger: true })) return;
+        await req('/admin/llm-configs/' + id, { method: 'DELETE' });
+        uiToast('已删除', 'ok');
+      }
+      await Promise.all([loadConfigs(), loadLogs()]);
+    } catch (err) {
+      uiToast('操作失败：' + err.code, 'err');
+    }
+  }
+
+  const UI_ERROR = {
+    LLM_TIMEOUT: '请求模型超时，检查接口地址或网络',
+    EMPTY_MODEL_OUTPUT: '模型没有返回内容'
+  };
+
+  async function createLlm() {
+    const body = {
+      name: $('#lName').value.trim(),
+      baseUrl: $('#lBase').value.trim(),
+      model: $('#lModel').value.trim(),
+      apiKey: $('#lKey').value.trim(),
+      isDefault: $('#lDefault').checked,
+      enabled: $('#lEnabled').checked
+    };
+    if (!body.name || !body.baseUrl || !body.model || !body.apiKey) {
+      uiToast('名称、地址、模型名、API Key 都要填', 'err');
+      return;
+    }
+    try {
+      await req('/admin/llm-configs', { method: 'POST', body });
+      ['#lName', '#lBase', '#lModel', '#lKey'].forEach(s => $(s).value = '');
+      $('#lDefault').checked = false;
+      uiToast('模型已添加，记得点「测试」验证一下', 'ok');
+      await Promise.all([loadConfigs(), loadLogs()]);
+    } catch (e) {
+      uiToast('添加失败：' + e.code, 'err');
+    }
+  }
+</script>
+</body>
+</html>

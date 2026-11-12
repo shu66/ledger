@@ -1,0 +1,108 @@
+<view class="page">
+  <view class="pending-bar" wx:if="{{pending}}" bindtap="onSyncNow">
+    <text>⏳ {{pending}} 笔存在本地，联网后自动同步</text>
+    <text class="pending-act">立即同步</text>
+  </view>
+
+  <view class="hero">
+    <view class="hero-top">
+      <text class="hello">{{me.nickname || '你好'}}</text>
+      <text class="date">{{todayLabel}}</text>
+    </view>
+    <view class="hero-main">
+      <text class="cur">¥</text>
+      <text class="num">{{monthOut}}</text>
+    </view>
+    <view class="hero-sub">本月支出 · {{monthCount}} 笔 · 收入 ¥{{monthIn}}</view>
+  </view>
+
+  <view class="composer card">
+    <textarea class="ta" value="{{text}}" placeholder="一句话记账：午饭面馆 25，打车 18"
+      placeholder-class="ph" maxlength="200" auto-height bindinput="onInput" />
+    <view class="composer-foot">
+      <text class="ai-tip">AI 自动拆金额与分类</text>
+      <view class="send {{text ? 'on' : ''}}" bindtap="onSubmit">
+        <text wx:if="{{!loading}}">解析</text>
+        <text wx:else>解析中</text>
+      </view>
+    </view>
+  </view>
+
+  <scroll-view class="chips" scroll-x>
+    <view class="chip" wx:for="{{examples}}" wx:key="*this" data-t="{{item}}" bindtap="onExample">{{item}}</view>
+  </scroll-view>
+
+  <view class="thinking" wx:if="{{loading}}">
+    <view class="dot"></view>
+    <view class="dot d2"></view>
+    <view class="dot d3"></view>
+    <text class="thinking-t">正在拆解这句话</text>
+  </view>
+
+  <view class="draft card" wx:for="{{cards}}" wx:key="index">
+    <view class="draft-top">
+      <view class="ico">{{item.icon}}</view>
+      <view class="mid">
+        <view class="amt">
+          <text class="sym">¥</text>
+          <input class="amt-in" type="digit" value="{{item.amountInput}}"
+            data-i="{{index}}" bindinput="onAmount" />
+        </view>
+        <view class="meta">
+          {{item.type === 'income' ? '收入' : '支出'}} · {{item.catName}}
+          <text wx:if="{{item.warn}}" class="warn"> · 金额建议核对</text>
+        </view>
+      </view>
+      <view class="x" data-i="{{index}}" bindtap="onDrop">✕</view>
+    </view>
+    <view class="draft-foot">
+      <view class="pick" data-i="{{index}}" bindtap="onPickCategory">换分类</view>
+      <text class="note">{{item.note || item.merchant || '未识别备注'}}</text>
+    </view>
+  </view>
+
+  <view class="confirm-wrap" wx:if="{{cards.length}}">
+    <button class="btn-primary" bindtap="onConfirm">确认入账 {{cards.length}} 笔</button>
+  </view>
+
+  <view class="section">
+    <view class="sec-head">
+      <text>最近记录</text>
+      <text class="more" bindtap="goBill">全部账单 ›</text>
+    </view>
+
+    <view class="list card" wx:if="{{recent.length}}">
+      <view class="row" wx:for="{{recent}}" wx:key="id">
+        <view class="ico small">{{item.icon}}</view>
+        <view class="rmid">
+          <text class="rname">{{item.note || item.merchant || item.catName}}</text>
+          <text class="rsub">{{item.day}} · {{item.catName}} {{item.time}}</text>
+        </view>
+        <text class="ramt {{item.type === 'income' ? 'income' : ''}}">
+          {{item.type === 'income' ? '+' : '-'}}¥{{item.amountYuan}}
+        </text>
+      </view>
+    </view>
+    <view class="empty" wx:else>还没有记录，上面说一句试试</view>
+  </view>
+
+  <view class="safe"></view>
+
+  <view class="sheet-mask" wx:if="{{picker.show}}" bindtap="closePicker"></view>
+  <view class="sheet" wx:if="{{picker.show}}">
+    <view class="sheet-head">
+      <text class="sheet-title">选择分类</text>
+      <text class="sheet-close" bindtap="closePicker">完成</text>
+    </view>
+    <scroll-view class="sheet-body" scroll-y>
+      <view class="sheet-grid">
+        <view class="sheet-item {{c.id === picker.cur ? 'on' : ''}}"
+          wx:for="{{picker.cats}}" wx:for-item="c" wx:key="id"
+          data-id="{{c.id}}" bindtap="pickCat">
+          <text class="si-ico">{{c.icon || '✨'}}</text>
+          <text class="si-name">{{c.name}}</text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+</view>

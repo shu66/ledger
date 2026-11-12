@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>记账本 · 一句话记账</title>
+<link rel="stylesheet" href="/style.css" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='16' fill='%23D9552F'/><text x='32' y='44' font-size='34' text-anchor='middle' fill='white' font-family='serif'>账</text></svg>" />
+</head>
+<body>
+<div class="landing">
+  <nav class="landing-nav">
+    <a class="brand-link" href="/">
+      <span class="brand-mark">账</span>
+      <span><b>记账本</b><em>LEDGER</em></span>
+    </a>
+    <div class="row">
+      <a class="btn ghost sm" href="/login.html">登录</a>
+      <a class="btn sm" href="/app.html">开始记账</a>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div>
+      <span class="pill">AI 记账 · 自动分类 · 图表复盘</span>
+      <h1>记账这件事，<br />一句话就够了。</h1>
+      <p>「昨天打车 36，中午和同事吃饭 AA 89」——金额、商家、分类、日期一次拆好。想自己填也行，分类还能自己建。</p>
+      <div class="hero-actions">
+        <a class="btn" href="/app.html">打开网页版</a>
+        <a class="btn ghost" href="/login.html">登录已有账号</a>
+      </div>
+      <div class="hero-note">也可以在微信小程序里用：记一笔 · 手动记 · 账单</div>
+    </div>
+
+    <div class="preview">
+      <div class="preview-top">
+        <span>本月支出</span>
+        <span class="preview-month">2026 年 11 月</span>
+      </div>
+      <div class="preview-num">¥ 3,284.50</div>
+      <div class="preview-delta">较上月 <b>+8.2%</b></div>
+      <div class="preview-body">
+        <div id="heroDonut" class="preview-donut"></div>
+        <div class="preview-legend" id="heroLegend"></div>
+      </div>
+      <div class="preview-trend" id="heroTrend"></div>
+    </div>
+  </header>
+
+  <section class="showcase">
+    <div class="showcase-head">
+      <h2>账本，要看得见</h2>
+      <p>分类占比、月度趋势、每日支出、商家排行——记账不只是流水，复盘才知道钱去哪了。</p>
+    </div>
+
+    <div class="showcase-grid">
+      <div class="showcase-card">
+        <div class="sc-head"><b>支出结构</b><span>按分类</span></div>
+        <div class="sc-donut" id="demoDonut"></div>
+        <div class="legend compact" id="demoLegend"></div>
+      </div>
+
+      <div class="showcase-card">
+        <div class="sc-head"><b>近 6 个月收支</b><span>趋势</span></div>
+        <div id="demoTrend"></div>
+      </div>
+
+      <div class="showcase-card">
+        <div class="sc-head"><b>每日支出</b><span>11 月</span></div>
+        <div id="demoDays"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="features">
+    <div class="feature">
+      <div class="fi">✦</div>
+      <h3>AI 解析，越用越懂你</h3>
+      <p>一句话几笔账都能拆开；遇到没有的分类，AI 会自己建一个，下次就能直接选。</p>
+    </div>
+    <div class="feature">
+      <div class="fi">✎</div>
+      <h3>不想用 AI 也行</h3>
+      <p>手动记账有独立入口，金额、分类、备注、日期都在一张卡里，两秒记完。</p>
+    </div>
+    <div class="feature">
+      <div class="fi">⇩</div>
+      <h3>一键导出账单</h3>
+      <p>本月或全部账单导出 CSV，Excel 直接打开，中文不乱码，随时备份。</p>
+    </div>
+  </section>
+
+  <footer class="landing-foot">
+    <span>© 2026 记账本 · 数据存在你自己的 MySQL 里</span>
+    <span class="row"><a href="/login.html">登录</a><a href="/app.html">账本</a></span>
+  </footer>
+</div>
+
+<script src="/common.js"></script>
+<script>
+(function () {
+  const expense = [
+    { label: '餐饮', value: 89200, color: '#D9552F' },
+    { label: '居住', value: 220000, color: '#E08A3C' },
+    { label: '购物', value: 12890, color: '#C9A227' },
+    { label: '交通', value: 5400, color: '#4C9A6E' },
+    { label: '娱乐', value: 4500, color: '#3E7CB1' }
+  ];
+  const total = expense.reduce((s, x) => s + x.value, 0);
+
+  document.getElementById('heroDonut').innerHTML =
+    donutSvg(expense, { size: 148, thickness: 15, center: '¥' + Number(money(total).split('.')[0]).toLocaleString('zh-CN'), sub: '总支出' });
+  document.getElementById('heroLegend').innerHTML = expense.slice(0, 3).map(s =>
+    '<div class="preview-legend-row"><i class="dotc" style="background:' + s.color + '"></i>' +
+    '<span>' + s.label + '</span><b>¥' + money(s.value) + '</b></div>').join('');
+
+  document.getElementById('heroTrend').innerHTML = barsSvg([
+    { label: '2026-06', expense: 268000, income: 1200000 },
+    { label: '2026-07', expense: 312000, income: 1200000 },
+    { label: '2026-08', expense: 245000, income: 1350000 },
+    { label: '2026-09', expense: 298000, income: 1200000 },
+    { label: '2026-10', expense: 303500, income: 1200000 },
+    { label: '2026-11', expense: 328450, income: 1200000 }
+  ]);
+
+  document.getElementById('demoDonut').innerHTML =
+    donutSvg(expense, { size: 176, thickness: 18, center: '¥' + money(total), sub: '总支出' });
+  document.getElementById('demoLegend').innerHTML = expense.map(s =>
+    '<div class="legend-row"><i class="dotc" style="background:' + s.color + '"></i>' +
+    '<span class="lg-name">' + s.label + '</span><span class="lg-amt">¥' + money(s.value) + '</span>' +
+    '<span class="lg-pct">' + pctOf(s.value, total) + '%</span></div>').join('');
+
+  document.getElementById('demoTrend').innerHTML = barsSvg([
+    { label: '2026-06', expense: 268000, income: 1200000 },
+    { label: '2026-07', expense: 312000, income: 1200000 },
+    { label: '2026-08', expense: 245000, income: 1350000 },
+    { label: '2026-09', expense: 298000, income: 1200000 },
+    { label: '2026-10', expense: 303500, income: 1200000 },
+    { label: '2026-11', expense: 328450, income: 1200000 }
+  ]);
+
+  const days = [];
+  const pattern = [0, 0, 128, 0, 45, 0, 320, 0, 0, 89, 0, 0, 220, 0, 36, 0, 0, 150, 0, 0, 62, 0, 0, 410, 0, 0, 30, 0, 0, 95];
+  pattern.forEach((v, i) => days.push({ day: '2026-11-' + String(i + 1).padStart(2, '0'), expense: v, income: 0 }));
+  document.getElementById('demoDays').innerHTML = dayBarsSvg(days);
+})();
+</script>
+</body>
+</html>

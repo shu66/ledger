@@ -1,0 +1,57 @@
+server:
+  port: ${PORT:3000}
+  address: 0.0.0.0
+  error:
+    include-message: never
+
+spring:
+  config:
+    # 兼容三种启动位置：server/ 下、项目根下（IDE 常见）、以及环境变量
+    import: optional:file:./.env[.properties],optional:file:./server/.env[.properties]
+  datasource:
+    # 变量名必须与 docker-compose / .env.example 一致（原来误写成 SPRING_DATASOURCE_Ubc）
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/ledger?useUnicode=true&characterEncoding=utf8&connectionTimeZone=%2B08:00&forceConnectionTimeZoneToSession=true&allowPublicKeyRetrieval=true&useSSL=false}
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    # 不设默认口令：本地写在 server/.env，生产用环境变量
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+    hikari:
+      maximum-pool-size: 8
+      connection-timeout: 10000
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: false
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: false
+    default-property-inclusion: non_null
+
+app:
+  # 构建时由 Maven 资源过滤替换成 pom.xml 的 <version>，代码里不再硬编码
+  version: '@project.version@'
+  public-url: ${APP_PUBLIC_URL:http://localhost:3000}
+  secret: ${APP_SECRET:}
+  admin-email: ${APP_ADMIN_EMAIL:}
+  signup-enabled: ${APP_SIGNUP_ENABLED:true}
+  # 部署在 nginx / 反代之后设为 true，限流与审计日志才会取 X-Forwarded-For
+  trust-proxy: ${APP_TRUST_PROXY:false}
+  # 每人每天的 AI 次数上限（解析 / 总结分开算）
+  ai-parse-daily: ${AI_PARSE_DAILY:50}
+  ai-summary-daily: ${AI_SUMMARY_DAILY:20}
+
+wx:
+  appid: ${WX_APPID:}
+  secret: ${WX_SECRET:}
+
+jwt:
+  secret: ${JWT_SECRET:}
+  ttl-days: 30
+  bind-ttl-minutes: 10
+
+llm:
+  connect-timeout-ms: 5000
+  read-timeout-ms: 25000
+
+logging:
+  level:
+    com.surf.ledger: INFO

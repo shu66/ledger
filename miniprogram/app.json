@@ -1,0 +1,28 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/add/add",
+    "pages/bill/bill",
+    "pages/login/login"
+  ],
+  "window": {
+    "navigationBarTitleText": "记账本",
+    "navigationBarBackgroundColor": "#F6F2EC",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#F6F2EC",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "color": "#9A9186",
+    "selectedColor": "#D9552F",
+    "backgroundColor": "#FFFDF9",
+    "borderStyle": "white",
+    "list": [
+      { "pagePath": "pages/index/index", "text": "记一笔" },
+      { "pagePath": "pages/add/add", "text": "手动记" },
+      { "pagePath": "pages/bill/bill", "text": "账单" }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

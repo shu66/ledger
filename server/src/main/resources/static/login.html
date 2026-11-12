@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>登录 · 记账本</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="auth">
+  <section class="auth-left">
+    <div class="auth-brand">
+      <div class="brand-mark">账</div>
+      <div>
+        <div class="brand-name" style="color:#F7EFE4">记账本</div>
+        <span class="brand-sub" style="color:#9C8F7D">LEDGER · 一句话记账</span>
+      </div>
+    </div>
+
+    <div class="auth-copy">
+      <h1>一句话，<br>就把账记清楚了。</h1>
+      <p>「午饭面馆 25 元」——AI 自动拆出金额、商家、分类与时间。不想用 AI 也可以手写一笔，分类还能自己建。</p>
+      <div class="auth-points">
+        <div class="auth-point"><i>⌘</i><span>自然语言解析，一次可记多笔</span></div>
+        <div class="auth-point"><i>✦</i><span>AI 会顺手创建你还没有的分类</span></div>
+        <div class="auth-point"><i>✓</i><span>金额、分类、时间都可核对后入账</span></div>
+      </div>
+    </div>
+
+    <div class="auth-foot">© 2026 记账本 · 数据存在你自己的 MySQL 里</div>
+  </section>
+
+  <section class="auth-right">
+    <div class="auth-card">
+      <div class="auth-tabs" id="tabs">
+        <button type="button" data-mode="login" class="on">登录</button>
+        <button type="button" data-mode="register">注册</button>
+      </div>
+
+      <h2 id="formTitle" style="font-size:22px;margin-bottom:6px">欢迎回来</h2>
+      <p class="hint" id="formSub" style="margin-bottom:22px">用邮箱和密码登录你的账本</p>
+
+      <form id="form" autocomplete="on">
+        <div class="field" id="nickWrap" style="display:none">
+          <label for="nickname">昵称（可选）</label>
+          <input id="nickname" type="text" maxlength="24" placeholder="怎么称呼你">
+        </div>
+        <div class="field">
+          <label for="email">邮箱</label>
+          <input id="email" type="email" autocomplete="username" placeholder="you@example.com" required>
+        </div>
+        <div class="field">
+          <label for="password">密码</label>
+          <input id="password" type="password" autocomplete="current-password" placeholder="至少 8 位" required>
+        </div>
+
+        <div class="err" id="err"></div>
+
+        <button class="btn block" id="submit" type="submit">登录</button>
+      </form>
+
+      <div class="auth-links">
+        <a href="#" id="forgot">忘记密码？</a>
+        <a href="/">了解项目</a>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script src="/common.js"></script>
+<script>
+  const ERRORS = {
+    INVALID_EMAIL: '邮箱格式不对',
+    EMAIL_TAKEN: '这个邮箱已经注册过了，直接登录吧',
+    BAD_CREDENTIALS: '邮箱或密码不对',
+    WEAK_PASSWORD: '密码至少 8 位',
+    SIGNUP_DISABLED: '注册暂时关闭',
+    TOO_MANY: '操作太频繁，稍后再试',
+    NETWORK: '网络开小差了，检查一下服务是否启动'
+  };
+
+  let mode = 'login';
+  const tabs = $$('#tabs button');
+  const errEl = $('#err');
+
+  tabs.forEach(btn => btn.onclick = () => {
+    mode = btn.dataset.mode;
+    tabs.forEach(b => b.classList.toggle('on', b === btn));
+    $('#nickWrap').style.display = mode === 'register' ? 'flex' : 'none';
+    $('#formTitle').textContent = mode === 'register' ? '创建账本' : '欢迎回来';
+    $('#formSub').textContent = mode === 'register' ? '第一个注册的账号会自动成为管理员' : '用邮箱和密码登录你的账本';
+    $('#submit').textContent = mode === 'register' ? '注册并登录' : '登录';
+    $('#password').autocomplete = mode === 'register' ? 'new-password' : 'current-password';
+    errEl.textContent = '';
+  });
+
+  $('#form').onsubmit = async (e) => {
+    e.preventDefault();
+    errEl.textContent = '';
+    const email = $('#email').value.trim();
+    const password = $('#password').value;
+    const nickname = $('#nickname').value.trim();
+    const btn = $('#submit');
+
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { errEl.textContent = '请填写正确的邮箱'; return; }
+    if (password.length < 8) { errEl.textContent = '密码至少 8 位'; return; }
+
+    btn.disabled = true;
+    btn.textContent = mode === 'register' ? '创建中…' : '登录中…';
+
+    try {
+      const res = await req(mode === 'register' ? '/auth/register' : '/auth/login', {
+        method: 'POST',
+        body: { email, password, nickname }
+      });
+      setToken(res.token);
+      location.href = res.role === 'admin' ? '/admin.html' : '/app.html';
+    } catch (err) {
+      errEl.textContent = ERRORS[err.code] || ('出错了：' + err.code);
+      btn.disabled = false;
+      btn.textContent = mode === 'register' ? '注册并登录' : '登录';
+    }
+  };
+
+  $('#forgot').onclick = async (e) => {
+    e.preventDefault();
+    const email = $('#email').value.trim();
+    if (!email) { errEl.textContent = '先在上面填一下邮箱'; return; }
+    try {
+      await req('/auth/password/forgot', { method: 'POST', body: { email } });
+      uiToast('如果这个邮箱存在，重置链接已生成（当前版本写在服务端日志里）');
+    } catch (err) {
+      uiToast(ERRORS[err.code] || err.code, 'err');
+    }
+  };
+
+  if (token()) location.replace('/app.html');
+</script>
+</body>
+</html>
