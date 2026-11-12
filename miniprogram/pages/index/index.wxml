@@ -57,7 +57,8 @@
     </view>
     <view class="draft-foot">
       <view class="pick" data-i="{{index}}" bindtap="onPickCategory">换分类</view>
-      <text class="note">{{item.note || item.merchant || '未识别备注'}}</text>
+      <input class="note-in" value="{{item.note}}" data-i="{{index}}" bindinput="onNote"
+        placeholder="备注，可以改" placeholder-class="note-ph" maxlength="60" />
     </view>
   </view>
 

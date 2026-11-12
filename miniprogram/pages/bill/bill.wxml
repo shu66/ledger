@@ -52,7 +52,8 @@
     <view class="count-line">共 {{count}} 笔</view>
 
     <view class="bars" wx:if="{{tops.length}}">
-      <view class="bar-item" wx:for="{{tops}}" wx:key="category">
+      <view class="bar-item" wx:for="{{tops}}" wx:key="category"
+        data-cat="{{item.category}}" data-name="{{item.name}}" bindtap="filterCat">
         <view class="bi-top">
           <text class="bi-name">{{item.icon}} {{item.name}}</text>
           <text class="bi-num">¥{{item.totalYuan}}</text>
@@ -64,6 +65,71 @@
     </view>
   </view>
 
+  <view class="seg view-seg">
+    <view class="seg-i {{view === 'list' ? 'on' : ''}}" data-v="list" bindtap="setView">明细</view>
+    <view class="seg-i {{view === 'stat' ? 'on' : ''}}" data-v="stat" bindtap="setView">统计 · 分类</view>
+  </view>
+
+  <block wx:if="{{view === 'stat'}}">
+    <view class="card chart">
+      <view class="ch-head">
+        <text class="ch-title">近 6 个月收支</text>
+        <text class="ch-sub">元</text>
+      </view>
+      <view class="trend">
+        <view class="tcol" wx:for="{{trend}}" wx:key="label">
+          <view class="tbars">
+            <view class="tbar out" style="height: {{item.eh}}%"></view>
+            <view class="tbar in" style="height: {{item.ih}}%"></view>
+          </view>
+          <text class="tlabel">{{item.label}}</text>
+        </view>
+      </view>
+      <view class="legend">
+        <text class="dot out"></text><text class="lg">支出</text>
+        <text class="dot in"></text><text class="lg">收入</text>
+      </view>
+    </view>
+
+    <view class="card chart" wx:if="{{showDays}}">
+      <view class="ch-head">
+        <text class="ch-title">每日支出</text>
+        <text class="ch-sub">最高 ¥{{maxDayYuan}}</text>
+      </view>
+      <view class="days">
+        <view class="dcol" wx:for="{{dayChart}}" wx:key="label">
+          <view class="dbar" style="height: {{item.h}}%"></view>
+          <text class="dlabel">{{item.label}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="card chart">
+      <view class="ch-head">
+        <text class="ch-title">分类占比</text>
+        <text class="ch-sub">点一行查看明细</text>
+      </view>
+      <view class="catline" wx:for="{{statCats}}" wx:key="category"
+        data-cat="{{item.category}}" data-name="{{item.name}}" bindtap="filterCat">
+        <view class="cl-top">
+          <text class="cl-name">{{item.icon}} {{item.name}}</text>
+          <text class="cl-num">¥{{item.totalYuan}} · {{item.pct}}%</text>
+        </view>
+        <view class="cl-track">
+          <view class="cl-fill" style="width: {{item.w}}%"></view>
+        </view>
+        <text class="cl-n">{{item.n}} 笔</text>
+      </view>
+      <view class="empty" wx:if="{{!statCats.length}}">这个区间还没有支出</view>
+    </view>
+  </block>
+
+  <view class="filter-chip" wx:if="{{cat}}" bindtap="clearCat">
+    <text>只看：{{catName}}</text>
+    <text class="fc-x">✕</text>
+  </view>
+
+  <block wx:if="{{view === 'list'}}">
   <view class="group" wx:for="{{groups}}" wx:key="day" wx:for-item="g">
     <view class="gh">
       <text class="gl">{{g.label}}</text>
@@ -91,6 +157,7 @@
   </view>
 
   <view class="tip" wx:if="{{groups.length}}">点一笔可以改金额、改分类或删除</view>
+  </block>
 
   <view class="logout" bindtap="onLogout">退出登录</view>
   <view class="safe"></view>

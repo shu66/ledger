@@ -29,8 +29,16 @@ Page({
     label: '',
     q: '',
     custom: false,
+    view: 'list',          // list | stat
+    cat: '',               // 分类筛选
+    catName: '',
     groups: [],
     tops: [],
+    statCats: [],
+    trend: [],
+    dayChart: [],
+    showDays: false,
+    maxDayYuan: '0.00',
     out: '0.00',
     in: '0.00',
     net: '0.00',
@@ -148,7 +156,11 @@ Page({
     try {
       const params = { from: this.data.from, to: this.data.to, limit: 1000 };
       if (this.data.q) params.q = this.data.q;
-      const rows = await api.get('/api/transactions', params);
+      if (this.data.cat) params.category = this.data.cat;
+      const [rows, rep] = await Promise.all([
+        api.get('/api/transactions', params),
+        api.get('/api/report', { from: this.data.from, to: this.data.to }).catch(() => null)
+      ]);
       const days = new Map();
       const cats = new Map();
       let out = 0, inc = 0;
@@ -215,13 +227,80 @@ Page({
         out: fmt.yuan(out),
         in: fmt.yuan(inc),
         net: fmt.yuan(inc - out),
-        count: rows.length
+        count: rows.length,
+        ...this.buildStats(rep || {})
       });
     } catch (e) {
       if (!outbox.isNetwork(e)) wx.showToast({ title: '加载失败', icon: 'none' });
     } finally {
       this.setData({ loading: false });
     }
+  },
+
+  /* ---------- 统计视图 ---------- */
+  buildStats(rep) {
+    const exp = rep.expense || 0;
+    const catMap = this.data.catMap;
+    const statCats = (rep.byCategory || [])
+      .filter(c => c.type === 'expense')
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 12)
+      .map(c => {
+        const m = catMap[c.category] || {};
+        return {
+          category: c.category,
+          name: m.name || c.category,
+          icon: m.icon || '✨',
+          totalYuan: fmt.yuan(c.total),
+          n: c.n,
+          pct: exp ? Math.round(c.total / exp * 1000) / 10 : 0
+        };
+      });
+    const maxPct = statCats.length ? statCats[0].pct : 0;
+    statCats.forEach(c => { c.w = maxPct ? Math.max(3, Math.round(c.pct / maxPct * 100)) : 0; });
+
+    const trend = (rep.trend || []).map(t => ({
+      label: Number(t.month.slice(5)) + '月',
+      expense: t.expense,
+      income: t.income
+    }));
+    const maxT = Math.max(1, ...trend.map(t => Math.max(t.expense, t.income)));
+    trend.forEach(t => {
+      t.eh = Math.max(2, Math.round(t.expense / maxT * 100));
+      t.ih = Math.max(2, Math.round(t.income / maxT * 100));
+    });
+
+    const days = rep.byDay || [];
+    const showDays = days.length > 0 && days.length <= 62;
+    const maxD = Math.max(1, ...days.map(d => d.expense));
+    const dayChart = showDays ? days.map(d => ({
+      label: String(Number(d.day.slice(8))),
+      h: Math.max(2, Math.round(d.expense / maxD * 100))
+    })) : [];
+
+    return {
+      statCats: statCats,
+      trend: trend,
+      dayChart: dayChart,
+      showDays: showDays,
+      maxDayYuan: fmt.yuan(days.length ? maxD : 0)
+    };
+  },
+
+  setView(e) {
+    this.setData({ view: e.currentTarget.dataset.v });
+  },
+
+  filterCat(e) {
+    const cat = e.currentTarget.dataset.cat;
+    const name = e.currentTarget.dataset.name;
+    this.setData({ cat: cat, catName: name, view: 'list' });
+    this.load();
+  },
+
+  clearCat() {
+    this.setData({ cat: '', catName: '' });
+    this.load();
   },
 
   /* ---------- 单笔操作：改金额 / 改分类 / 删除 ---------- */

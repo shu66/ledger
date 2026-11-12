@@ -125,6 +125,13 @@ Page({
     this.setData({ cards, edited: true });
   },
 
+  onNote(e) {
+    const i = e.currentTarget.dataset.i;
+    const cards = this.data.cards.slice();
+    cards[i] = Object.assign({}, cards[i], { note: e.detail.value });
+    this.setData({ cards, edited: true });
+  },
+
   onPickCategory(e) {
     const i = e.currentTarget.dataset.i;
     const type = this.data.cards[i].type;

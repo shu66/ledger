@@ -261,3 +261,42 @@
 }
 .sheet-item .si-ico { font-size: 34rpx; }
 .sheet-item .si-name { font-size: 22rpx; color: #3A342C; }
+/* ---------- 统计视图 ---------- */
+.view-seg { margin: 6rpx 0 20rpx; }
+
+.chart { padding: 28rpx 28rpx 24rpx; margin-bottom: 20rpx; }
+
+.ch-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 20rpx; }
+.ch-title { font-size: 28rpx; font-weight: 600; color: #201D18; }
+.ch-sub { font-size: 21rpx; color: #A79C8F; }
+
+.trend { display: flex; align-items: flex-end; height: 250rpx; gap: 10rpx; }
+.tcol { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+.tbars { display: flex; align-items: flex-end; gap: 6rpx; height: 200rpx; }
+.tbar { width: 18rpx; border-radius: 8rpx 8rpx 2rpx 2rpx; }
+.tbar.out { background: linear-gradient(180deg, #E8744F, #D9552F); }
+.tbar.in { background: linear-gradient(180deg, #4FA97C, #2F8F62); }
+.tlabel { margin-top: 12rpx; font-size: 20rpx; color: #A79C8F; }
+
+.legend { display: flex; align-items: center; justify-content: center; margin-top: 8rpx; }
+.dot { width: 12rpx; height: 12rpx; border-radius: 50%; margin-right: 8rpx; }
+.dot.out { background: #D9552F; }
+.dot.in { background: #2F8F62; }
+.lg { font-size: 21rpx; color: #8A8074; margin-right: 26rpx; }
+
+.days { display: flex; align-items: flex-end; height: 190rpx; gap: 4rpx; }
+.dcol { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+.dbar { width: 100%; max-width: 18rpx; background: #E8906F; border-radius: 6rpx 6rpx 2rpx 2rpx; }
+.dlabel { margin-top: 8rpx; font-size: 17rpx; color: #B3A899; }
+
+.catline { padding: 14rpx 0; border-bottom: 1rpx solid #F6F0E8; }
+.catline:last-child { border-bottom: none; }
+.cl-top { display: flex; justify-content: space-between; align-items: baseline; }
+.cl-name { font-size: 26rpx; color: #2B2620; }
+.cl-num { font-size: 23rpx; color: #6B6258; }
+.cl-track { margin-top: 12rpx; height: 12rpx; border-radius: 999rpx; background: #F4EDE4; overflow: hidden; }
+.cl-fill { height: 100%; border-radius: 999rpx; background: linear-gradient(90deg, #F0A184, #D9552F); }
+.cl-n { display: block; margin-top: 8rpx; font-size: 20rpx; color: #B3A899; }
+
+.filter-chip { display: inline-flex; align-items: center; gap: 12rpx; margin: 4rpx 0 16rpx; padding: 10rpx 22rpx; border-radius: 999rpx; background: #FBE9E2; color: #C24A26; font-size: 23rpx; }
+.fc-x { font-size: 22rpx; }
