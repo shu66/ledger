@@ -7,26 +7,38 @@
     <text class="slogan">一句话，把每一笔记下来</text>
   </view>
 
-  <view class="panel">
-    <view class="tabs" wx:if="{{mode !== 'bind'}}">
-      <view class="tab {{mode === 'login' ? 'on' : ''}}" data-m="login" bindtap="switchMode">登录</view>
-      <view class="tab {{mode === 'register' ? 'on' : ''}}" data-m="register" bindtap="switchMode">注册</view>
+  <!-- ① 微信登录：只放一个入口 -->
+  <block wx:if="{{screen === 'wx' && mode !== 'bind'}}">
+    <view class="panel wxpanel">
+      <text class="wt">欢迎使用记账本</text>
+      <text class="ws">用微信授权，一步进入你的账本</text>
+      <button class="wxbtn big" bindtap="onWxLogin" loading="{{wxLoading}}" hover-class="wxbtn-big-hover">
+        <view class="wxi">微</view>
+        <text>微信一键登录</text>
+      </button>
+      <text class="wtip">第一次用会引导你绑定一个邮箱账号，之后直接进</text>
     </view>
-    <view class="bindhead" wx:else>
+
+    <view class="alt" bindtap="toEmail">
+      <text class="alt-link">使用邮箱登录 / 注册</text>
+    </view>
+  </block>
+
+  <!-- ② 邮箱登录 / 注册 / 绑定微信 -->
+  <view class="panel" wx:else>
+    <view class="backrow" wx:if="{{mode !== 'bind'}}" bindtap="toWx">
+      <text class="backi">‹</text>
+      <text class="backt">用微信登录</text>
+    </view>
+
+    <view class="bindhead" wx:if="{{mode === 'bind'}}">
       <text class="bt">绑定邮箱账号</text>
       <text class="bs">绑好后，下次打开微信直接进来</text>
     </view>
 
-    <button class="wxbtn" wx:if="{{mode !== 'bind'}}" bindtap="onWxLogin"
-      loading="{{wxLoading}}" hover-class="wxbtn-hover">
-      <view class="wxi">微</view>
-      <text>微信一键登录</text>
-    </button>
-
-    <view class="or" wx:if="{{mode !== 'bind'}}">
-      <view class="or-line"></view>
-      <text class="or-t">或使用邮箱密码</text>
-      <view class="or-line"></view>
+    <view class="tabs" wx:if="{{mode !== 'bind'}}">
+      <view class="tab {{mode === 'login' ? 'on' : ''}}" data-m="login" bindtap="switchMode">登录</view>
+      <view class="tab {{mode === 'register' ? 'on' : ''}}" data-m="register" bindtap="switchMode">注册</view>
     </view>
 
     <view class="field" bindtap="onFieldTap" data-k="email">
@@ -61,7 +73,7 @@
       <text>{{err}}</text>
     </view>
 
-    <button class="btn-primary submit {{mode === 'register' ? 'wide' : ''}}" loading="{{loading}}" bindtap="submit">
+    <button class="btn-primary submit" loading="{{loading}}" bindtap="submit">
       {{mode === 'bind' ? '绑定并登录' : (mode === 'register' ? '注册并登录' : '登录')}}
     </button>
 

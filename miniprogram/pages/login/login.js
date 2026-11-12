@@ -4,6 +4,7 @@ const app = getApp();
 Page({
   data: {
     mode: 'bind',        // bind | login | register
+    screen: 'wx',        // wx：只显示微信登录；email：邮箱表单
     email: '',
     password: '',
     nickname: '',
@@ -22,7 +23,22 @@ Page({
       const info = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync();
       topPad = (info.statusBarHeight || 24) + 10;
     } catch (e) { /* 取不到就用默认值 */ }
-    this.setData({ bindToken: bt, mode: bt ? 'bind' : 'login', topPad });
+    this.setData({ bindToken: bt, mode: bt ? 'bind' : 'login', topPad, screen: bt ? 'email' : 'wx' });
+  },
+
+  /** 切到邮箱表单 */
+  toEmail() {
+    this.setData({ screen: 'email', mode: 'login', err: '', focusKey: '' });
+  },
+
+  /** 从邮箱表单切回微信登录 */
+  toWx() {
+    const patch = { screen: 'wx', mode: 'login', err: '', focusKey: '', password: '' };
+    if (this.data.bindToken) {
+      wx.removeStorageSync('bindToken');
+      patch.bindToken = '';
+    }
+    this.setData(patch);
   },
 
   /** 微信一键登录：已绑定直接进，未绑定转到绑定邮箱 */
@@ -38,7 +54,7 @@ Page({
     } catch (e) {
       if (e.code === 'NEED_BIND') {
         wx.setStorageSync('bindToken', e.bindToken);
-        this.setData({ mode: 'bind', bindToken: e.bindToken, password: '', err: '', focusKey: '' });
+        this.setData({ screen: 'email', mode: 'bind', bindToken: e.bindToken, password: '', err: '', focusKey: '' });
       } else {
         this.setData({ err: this.errText(e) });
       }
