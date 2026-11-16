@@ -8,7 +8,7 @@
   </view>
 
   <!-- ① 微信登录：只放一个入口 -->
-  <block wx:if="{{screen === 'wx' && mode !== 'bind'}}">
+  <block wx:if="{{screen === 'wx' && mode !== 'bind' && mode !== 'wxreg'}}">
     <view class="panel wxpanel">
       <text class="wt">欢迎使用记账本</text>
       <text class="ws">用微信授权，一步进入你的账本</text>
@@ -26,23 +26,29 @@
 
   <!-- ② 邮箱登录 / 注册 / 绑定微信 -->
   <view class="panel" wx:else>
-    <view class="backrow" wx:if="{{mode !== 'bind'}}" bindtap="toWx">
+    <view class="backrow" wx:if="{{mode !== 'bind' && mode !== 'wxreg'}}" bindtap="toWx">
       <text class="backi">‹</text>
       <text class="backt">用微信登录</text>
     </view>
 
-    <view class="bindhead" wx:if="{{mode === 'bind'}}">
+    <view class="bindhead" wx:if="{{mode === 'bind' || mode === 'wxreg'}}">
       <text class="bt">绑定邮箱账号</text>
-      <text class="bs">绑好后，下次打开微信直接进来</text>
+      <text class="bs" wx:if="{{mode === 'wxreg'}}">第一次用：填一个邮箱和密码，直接创建账号并绑定，下次微信一键进</text>
+      <text class="bs" wx:else>已经有账号：填原来的邮箱和密码，绑定后微信一键进</text>
     </view>
 
-    <view class="tabs" wx:if="{{mode !== 'bind'}}">
+    <view class="seg" wx:if="{{mode === 'bind' || mode === 'wxreg'}}">
+      <view class="seg-i {{mode === 'wxreg' ? 'on' : ''}}" data-m="wxreg" bindtap="switchMode">创建账号</view>
+      <view class="seg-i {{mode === 'bind' ? 'on' : ''}}" data-m="bind" bindtap="switchMode">已有账号</view>
+    </view>
+
+    <view class="tabs" wx:if="{{mode === 'login' || mode === 'register'}}">
       <view class="tab {{mode === 'login' ? 'on' : ''}}" data-m="login" bindtap="switchMode">登录</view>
       <view class="tab {{mode === 'register' ? 'on' : ''}}" data-m="register" bindtap="switchMode">注册</view>
     </view>
 
     <view class="field" bindtap="onFieldTap" data-k="email">
-      <view class="label"><text>邮箱</text><text class="hint" wx:if="{{mode === 'login'}}">用注册时的邮箱</text></view>
+      <view class="label"><text>邮箱</text><text class="hint" wx:if="{{mode === 'login'}}">用注册时的邮箱</text><text class="hint" wx:elif="{{mode === 'wxreg'}}">就用它登录</text></view>
       <view class="ibox {{focusKey === 'email' ? 'on' : ''}}">
         <input class="ipt" type="text" placeholder="you@example.com" placeholder-class="ipt-ph"
           value="{{email}}" data-k="email" bindinput="onInput" bindfocus="onFocus" bindblur="onBlur"
@@ -51,7 +57,7 @@
     </view>
 
     <view class="field" bindtap="onFieldTap" data-k="password">
-      <view class="label"><text>密码</text><text class="hint" wx:if="{{mode === 'register'}}">至少 8 位</text></view>
+      <view class="label"><text>密码</text><text class="hint" wx:if="{{mode === 'register' || mode === 'wxreg'}}">至少 8 位</text></view>
       <view class="ibox {{focusKey === 'password' ? 'on' : ''}}">
         <input class="ipt" password placeholder="输入密码" placeholder-class="ipt-ph"
           value="{{password}}" data-k="password" bindinput="onInput" bindfocus="onFocus" bindblur="onBlur"
@@ -59,7 +65,7 @@
       </view>
     </view>
 
-    <view class="field" wx:if="{{mode === 'register'}}" bindtap="onFieldTap" data-k="nickname">
+    <view class="field" wx:if="{{mode === 'register' || mode === 'wxreg'}}" bindtap="onFieldTap" data-k="nickname">
       <view class="label"><text>昵称</text><text class="hint">可以不填</text></view>
       <view class="ibox {{focusKey === 'nickname' ? 'on' : ''}}">
         <input class="ipt" placeholder="怎么称呼你" placeholder-class="ipt-ph"
@@ -74,15 +80,10 @@
     </view>
 
     <button class="btn-primary submit" loading="{{loading}}" bindtap="submit">
-      {{mode === 'bind' ? '绑定并登录' : (mode === 'register' ? '注册并登录' : '登录')}}
+      {{mode === 'wxreg' ? '创建并绑定' : (mode === 'bind' ? '绑定并登录' : (mode === 'register' ? '注册并登录' : '登录'))}}
     </button>
 
-    <view class="links" wx:if="{{mode === 'bind'}}">
-      <text bindtap="switchMode" data-m="login">已有账号，直接登录</text>
-      <text bindtap="switchMode" data-m="register">注册新账号</text>
-    </view>
-
-    <view class="skip" wx:if="{{mode === 'bind'}}" bindtap="skipBind">先不绑定，用邮箱进</view>
+    <view class="skip" wx:if="{{mode === 'bind' || mode === 'wxreg'}}" bindtap="skipBind">先不绑定，用邮箱进</view>
   </view>
 
   <view class="foot">

@@ -256,6 +256,34 @@
   margin-top: 8rpx;
   font-size: 23rpx;
   color: #9A9186;
+  line-height: 1.5;
+}
+
+/* 「创建账号 / 已有账号」二选一 */
+.seg {
+  display: flex;
+  padding: 6rpx;
+  margin-bottom: 26rpx;
+  background: #F1E9DE;
+  border-radius: 20rpx;
+}
+
+.seg-i {
+  flex: 1;
+  height: 68rpx;
+  line-height: 68rpx;
+  text-align: center;
+  font-size: 25rpx;
+  color: #8C8175;
+  border-radius: 16rpx;
+  transition: all .18s;
+}
+
+.seg-i.on {
+  color: #201D18;
+  font-weight: 600;
+  background: #FFFFFF;
+  box-shadow: 0 2rpx 10rpx rgba(70, 45, 20, .08);
 }
 
 /* ---------- 输入框 ---------- */

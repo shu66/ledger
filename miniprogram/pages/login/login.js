@@ -3,7 +3,7 @@ const app = getApp();
 
 Page({
   data: {
-    mode: 'bind',        // bind | login | register
+    mode: 'bind',        // bind | wxreg | login | register
     screen: 'wx',        // wx：只显示微信登录；email：邮箱表单
     email: '',
     password: '',
@@ -23,7 +23,7 @@ Page({
       const info = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync();
       topPad = (info.statusBarHeight || 24) + 10;
     } catch (e) { /* 取不到就用默认值 */ }
-    this.setData({ bindToken: bt, mode: bt ? 'bind' : 'login', topPad, screen: bt ? 'email' : 'wx' });
+    this.setData({ bindToken: bt, mode: bt ? 'wxreg' : 'login', topPad, screen: bt ? 'email' : 'wx' });
   },
 
   /** 切到邮箱表单 */
@@ -54,7 +54,8 @@ Page({
     } catch (e) {
       if (e.code === 'NEED_BIND') {
         wx.setStorageSync('bindToken', e.bindToken);
-        this.setData({ screen: 'email', mode: 'bind', bindToken: e.bindToken, password: '', err: '', focusKey: '' });
+        // 第一次用：默认落到「创建账号」，填邮箱密码即建号并绑定，一次成功
+        this.setData({ screen: 'email', mode: 'wxreg', bindToken: e.bindToken, password: '', err: '', focusKey: '' });
       } else {
         this.setData({ err: this.errText(e) });
       }
@@ -114,6 +115,8 @@ Page({
       wx.removeStorageSync('bindToken');
       patch.bindToken = '';
     }
+    // 「创建账号 / 已有账号」都在绑定流程里，必须留在邮箱屏
+    if (mode === 'wxreg' || mode === 'bind') patch.screen = 'email';
     this.setData(patch);
   },
 
@@ -128,18 +131,20 @@ Page({
     try {
       let token;
 
-      if (mode === 'register') {
-        const r = await api.post('/auth/register', { email, password, nickname });
-        token = r.token;
-        // 刚注册的账号顺手绑上当前微信，失败不阻断登录
-        if (bindToken) {
-          try {
-            await api.post('/auth/wx/bind', { bindToken, email, password });
-          } catch (e) { /* ignore */ }
+      if (mode === 'wxreg' || (mode === 'register' && bindToken)) {
+        // 首次微信登录：建号 + 绑微信在同一次请求里完成
+        if (!bindToken) {
+          this.setData({ err: '绑定已超时，请重新点「微信一键登录」' });
+          return;
         }
+        const r = await api.post('/auth/wx/register', { bindToken, email, password, nickname });
+        token = r.token;
       } else if (bindToken) {
-        // bind 模式，以及「已有账号」从 bind 切到登录的情况：一次完成登录 + 绑微信
+        // 「已有账号」在绑定流程里，以及从 bind 切到登录：一次完成登录 + 绑微信
         const r = await api.post('/auth/wx/bind', { bindToken, email, password });
+        token = r.token;
+      } else if (mode === 'register') {
+        const r = await api.post('/auth/register', { email, password, nickname });
         token = r.token;
       } else {
         const r = await api.post('/auth/login', { email, password });
@@ -153,7 +158,14 @@ Page({
       await app.boot();
       wx.reLaunch({ url: '/pages/index/index' });
     } catch (e) {
-      this.setData({ err: this.errText(e) });
+      if (e.code === 'EMAIL_TAKEN' && mode === 'wxreg') {
+        // 这个邮箱早就注册过，切到「已有账号」让他输密码绑定
+        this.setData({ mode: 'bind', err: '这个邮箱已经注册过，输入密码就能绑定' });
+      } else if (e.code === 'BAD_CREDENTIALS' && mode === 'bind') {
+        this.setData({ err: '邮箱或密码不对；新用户请切到「创建账号」' });
+      } else {
+        this.setData({ err: this.errText(e) });
+      }
     } finally {
       this.setData({ loading: false });
     }
@@ -164,6 +176,6 @@ Page({
     // 不跳首页：此时还没有 token，跳过去会再次触发 NEED_BIND 被弹回登录页。
     // 记一个标记让 app.boot() 别再自动 wx.login，并留在本页切到邮箱登录。
     wx.setStorageSync('skipWx', true);
-    this.setData({ mode: 'login', password: '', err: '' });
+    this.setData({ screen: 'email', mode: 'login', password: '', err: '' });
   }
 });

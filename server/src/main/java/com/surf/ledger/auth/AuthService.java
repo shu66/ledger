@@ -53,7 +53,12 @@ public class AuthService {
     public Map<String, Object> register(String email, String password, String nickname) {
         String mail = normalizeEmail(email);
         validate(password);
+        NewUser u = createUser(mail, password, nickname);
+        return tokenPayload(u.id(), u.role());
+    }
 
+    /** 注册与「微信注册并绑定」共用的建号逻辑 */
+    private NewUser createUser(String mail, String password, String nickname) {
         Long exists = jdbc.queryForObject(
                 "SELECT COUNT(*) FROM users WHERE email = ?", Long.class, mail);
         if (exists != null && exists > 0) {
@@ -86,9 +91,10 @@ public class AuthService {
             return ps;
         }, kh);
 
-        long id = kh.getKey().longValue();
-        return tokenPayload(id, role);
+        return new NewUser(kh.getKey().longValue(), role);
     }
+
+    private record NewUser(long id, String role) {}
 
     public Map<String, Object> login(String email, String password) {
         String mail = normalizeEmail(email);
@@ -135,8 +141,7 @@ public class AuthService {
     }
 
     @Transactional
-    public Map<String, Object> bindWx(String bindToken, String email, String password) {
-        Claims c = tokens.parse(bindToken, TokenService.BIND);
+    public Map<String, Object> bindWx(String bindToken, String email, String password) {        Claims c = tokens.parse(bindToken, TokenService.BIND);
         if (c == null) throw new ApiException(HttpStatus.UNAUTHORIZED, "BIND_TOKEN_INVALID");
         String openid = c.get("openid", String.class);
 
@@ -172,6 +177,51 @@ public class AuthService {
 
         jdbc.update("UPDATE users SET last_login_at = NOW(3) WHERE id = ?", uid);
         return tokenPayload(uid, (String) u.get("role"));
+    }
+
+    /**
+     * 微信首次登录：一次完成「建账号 + 绑微信 + 发令牌」。
+     * 之前是客户端先 /auth/register 再 /auth/wx/bind，两次调用之间一旦
+     * 绑定票据过期（10 分钟）或第二步失败，就会出现「注册成功但微信没绑上」。
+     */
+    @Transactional
+    public Map<String, Object> wxRegister(String bindToken, String email, String password, String nickname) {
+        Claims c = tokens.parse(bindToken, TokenService.BIND);
+        if (c == null) throw new ApiException(HttpStatus.UNAUTHORIZED, "BIND_TOKEN_INVALID");
+        String openid = c.get("openid", String.class);
+
+        String mail = normalizeEmail(email);
+        validate(password);
+
+        // 同一个微信已经绑过账号：密码一致就当作登录，不再重复建号
+        List<Map<String, Object>> bound = jdbc.queryForList("""
+                SELECT u.id, u.email, u.role, u.status
+                FROM user_identities i JOIN users u ON u.id = i.user_id
+                WHERE i.provider = 'wechat' AND i.external_id = ?
+                """, openid);
+
+        if (!bound.isEmpty()) {
+            Map<String, Object> u = bound.get(0);
+            if (!mail.equalsIgnoreCase(String.valueOf(u.get("email")))) {
+                throw new ApiException(HttpStatus.CONFLICT, "WECHAT_ALREADY_BOUND");
+            }
+            if ("disabled".equals(u.get("status"))) {
+                throw new ApiException(HttpStatus.FORBIDDEN, "ACCOUNT_DISABLED");
+            }
+            long uid0 = ((Number) u.get("id")).longValue();
+            jdbc.update("UPDATE users SET last_login_at = NOW(3) WHERE id = ?", uid0);
+            return tokenPayload(uid0, (String) u.get("role"));
+        }
+
+        NewUser u = createUser(mail, password, nickname);
+
+        jdbc.update("""
+                INSERT INTO user_identities(user_id, provider, external_id)
+                VALUES (?, 'wechat', ?)
+                """, u.id(), openid);
+        jdbc.update("UPDATE users SET last_login_at = NOW(3) WHERE id = ?", u.id());
+
+        return tokenPayload(u.id(), u.role());
     }
 
     @Transactional

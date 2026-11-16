@@ -33,8 +33,18 @@
 ```json
 { "bindToken": "...", "email": "a@b.com", "password": "..." }
 ```
+给**已有账号**绑微信（邮箱必须已注册）。
 → `{ "token": "...", "role": "..." }`
 错误：`BIND_TOKEN_INVALID` / `BAD_CREDENTIALS` / `WECHAT_ALREADY_BOUND`
+
+### POST /auth/wx/register
+```json
+{ "bindToken": "...", "email": "new@b.com", "password": "至少8位", "nickname": "可不填" }
+```
+**第一次用微信登录时一次完成建号 + 绑定**，不会出现「注册成功但微信没绑上」。
+同一微信重复调用、且邮箱一致时直接返回该账号的令牌；邮箱已被别的账号注册返回 `EMAIL_TAKEN`，此时改用 `/auth/wx/bind` 输密码绑定。
+→ `{ "token": "...", "role": "..." }`
+错误：`BIND_TOKEN_INVALID` / `EMAIL_TAKEN` / `EMAIL_INVALID` / `WEAK_PASSWORD` / `SIGNUP_DISABLED` / `WECHAT_ALREADY_BOUND`
 
 ### POST /auth/wx/unbind     （需登录）
 → `{ "ok": true }`

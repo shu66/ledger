@@ -31,6 +31,7 @@ public class AuthController {
     public record LoginReq(String email, String password) {}
     public record WxLoginReq(String code) {}
     public record BindReq(String bindToken, String email, String password) {}
+    public record WxRegisterReq(String bindToken, String email, String password, String nickname) {}
     public record ForgotReq(String email) {}
     public record ResetReq(String token, String password) {}
 
@@ -59,6 +60,13 @@ public class AuthController {
     public Map<String, Object> bind(@RequestBody BindReq r, HttpServletRequest http) {
         guard(loginLimiter, http);
         return service.bindWx(r.bindToken(), r.email(), r.password());
+    }
+
+    /** 微信首次登录：创建账号并绑定，一次成功 */
+    @PostMapping("/wx/register")
+    public Map<String, Object> wxRegister(@RequestBody WxRegisterReq r, HttpServletRequest http) {
+        guard(registerLimiter, http);
+        return service.wxRegister(r.bindToken(), r.email(), r.password(), r.nickname());
     }
 
     @PostMapping("/wx/unbind")
